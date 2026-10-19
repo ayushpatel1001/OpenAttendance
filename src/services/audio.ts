@@ -19,7 +19,7 @@ class AudioService {
   }
 
   /**
-   * Harmonious FT Executive Bell Chime for successful verification
+   * Harmonious chime for successful verification
    */
   public playSuccessChime(): void {
     try {

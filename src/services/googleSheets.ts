@@ -4,6 +4,7 @@
 import { db, getSystemMeta, updateSystemMeta } from './db';
 
 export const DRIVE_FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+export const DEFAULT_CLIENT_ID = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || '';
 
 export interface SyncResult {
   success: boolean;

@@ -4,17 +4,18 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './', // Ensures assets load cleanly on GitHub Pages subpaths
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
       manifest: {
-        name: 'SheetPulse • FT Biometric Attendance',
+        name: 'SheetPulse • Biometric Attendance',
         short_name: 'SheetPulse',
         description: 'Zero-cost, local-first, privacy-centric attendance PWA backed by Google Drive & Sheets',
-        theme_color: '#FFF1E5',
-        background_color: '#FFF1E5',
+        theme_color: '#F8F9FA',
+        background_color: '#F8F9FA',
         display: 'standalone',
         orientation: 'portrait',
         icons: [

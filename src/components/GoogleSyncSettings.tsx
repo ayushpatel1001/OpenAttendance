@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Cloud, CheckCircle2, ExternalLink, RefreshCw, Database, Zap } from 'lucide-react';
 import type { MetaState, OutboxItem } from '../types';
 import { db } from '../services/db';
-import { googleSheetsService } from '../services/googleSheets';
+import { googleSheetsService, DEFAULT_CLIENT_ID } from '../services/googleSheets';
 
 interface GoogleSyncSettingsProps {
   meta: MetaState;
@@ -21,7 +21,7 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
   onRerunSetup,
   isSyncing,
 }) => {
-  const [clientId, setClientId] = useState(meta.google_client_id || '');
+  const [clientId, setClientId] = useState(meta.google_client_id || DEFAULT_CLIENT_ID);
   const [outboxItems, setOutboxItems] = useState<OutboxItem[]>([]);
   const [isProvisioning, setIsProvisioning] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);

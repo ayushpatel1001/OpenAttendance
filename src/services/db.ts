@@ -190,7 +190,7 @@ export async function initializeDatabase(): Promise<void> {
         action: p.action,
         device_id: 'Kiosk-London-Desk01',
         method: 'FACE',
-        geo_lat_lng: '51.5074,-0.1278', // London Fleet Street / Financial Times HQ
+        geo_lat_lng: '51.5074,-0.1278', // Workplace office coordinates
         late_mins: p.late_mins,
         confidence_score: 0.97,
         prev_hash_sig: hash,

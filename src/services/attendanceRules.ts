@@ -133,7 +133,7 @@ export async function executeFacePunch(
     action,
     device_id: meta.kiosk_device_id || 'Kiosk-London-Desk01',
     method: 'FACE',
-    geo_lat_lng: '51.5074,-0.1278', // Fleet Street / FT HQ coordinates
+    geo_lat_lng: '51.5074,-0.1278', // Workplace coordinates
     late_mins,
     confidence_score: confidenceScore,
     prev_hash_sig: punchHash,

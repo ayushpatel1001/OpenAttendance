@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { Cloud, CheckCircle2, Zap, ExternalLink } from 'lucide-react';
 import type { MetaState } from '../types';
-import { googleSheetsService } from '../services/googleSheets';
+import { googleSheetsService, DEFAULT_CLIENT_ID } from '../services/googleSheets';
 
 interface OnboardingSetupProps {
   meta: MetaState;
@@ -13,7 +13,7 @@ interface OnboardingSetupProps {
 
 export const OnboardingSetup: React.FC<OnboardingSetupProps> = ({ meta, onCompleteSetup }) => {
   const [step, setStep] = useState<number>(1);
-  const [clientId, setClientId] = useState<string>(meta.google_client_id || '');
+  const [clientId, setClientId] = useState<string>(meta.google_client_id || DEFAULT_CLIENT_ID);
   const [accessToken, setAccessToken] = useState<string>(meta.google_access_token || '');
   const [tokenExpiry, setTokenExpiry] = useState<number>(meta.google_token_expiry || 0);
   const [spreadsheetId, setSpreadsheetId] = useState<string>(meta.spreadsheet_id || '');
