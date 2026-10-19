@@ -1,4 +1,4 @@
-name: Deploy SheetPulse to GitHub Pages
+name: Deploy OpenAttendance to GitHub Pages
 
 on:
   push:

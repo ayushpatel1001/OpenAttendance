@@ -1,4 +1,4 @@
-// SheetPulse • Biometric Attendance System
+// OpenAttendance • Biometric Attendance System
 // TypeScript Domain Schema and Core Types
 
 export type PunchAction = 'IN' | 'OUT' | 'BREAK_START' | 'BREAK_END';

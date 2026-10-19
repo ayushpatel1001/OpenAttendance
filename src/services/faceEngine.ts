@@ -1,4 +1,4 @@
-// SheetPulse • On-Device Biometric Face ID Engine
+// OpenAttendance • On-Device Biometric Face ID Engine
 // 100% Local In-Browser Processing • Zero Biometric Image Storage
 // Generates & Compares 128-Float Mathematical Embedding Vectors
 

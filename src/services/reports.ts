@@ -1,4 +1,4 @@
-// SheetPulse • Weekly Reporting & Night-Shift Pairing Engine
+// OpenAttendance • Weekly Reporting & Night-Shift Pairing Engine
 // 16-Hour Pairing Window • Overtime Multipliers • Missing-Punch Resolution
 
 import { db } from './db';

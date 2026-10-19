@@ -1,4 +1,4 @@
-// SheetPulse • Google Drive & Sheets Configuration (Clean & Minimal)
+// OpenAttendance • Google Drive & Sheets Configuration (Clean & Minimal)
 
 import React, { useState, useEffect } from 'react';
 import { Cloud, CheckCircle2, ExternalLink, RefreshCw, Database, Zap } from 'lucide-react';
@@ -69,7 +69,7 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
     }
 
     setIsProvisioning(true);
-    setStatusMessage('Provisioning _SheetPulse_Master_DB in your Google Drive (5 tabs)...');
+    setStatusMessage('Provisioning _OpenAttendance_Master_DB in your Google Drive (5 tabs)...');
 
     try {
       const { spreadsheetId, spreadsheetUrl } = await googleSheetsService.provisionMasterSpreadsheet(
@@ -77,7 +77,7 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
       );
       onUpdateMeta({
         spreadsheet_id: spreadsheetId,
-        spreadsheet_name: '_SheetPulse_Master_DB',
+        spreadsheet_name: '_OpenAttendance_Master_DB',
         spreadsheet_url: spreadsheetUrl,
       });
       setStatusMessage(`Provisioning complete! Master sheet linked.`);

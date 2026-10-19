@@ -1,6 +1,6 @@
-# Step-by-Step Guide: Google OAuth 2.0 Setup for SheetPulse
+# Step-by-Step Guide: Google OAuth 2.0 Setup for OpenAttendance
 
-This guide walks you through creating a free **Google Cloud OAuth 2.0 Client ID** to connect SheetPulse to personal Google Drives and Google Sheets.
+This guide walks you through creating a free **Google Cloud OAuth 2.0 Client ID** to connect OpenAttendance to personal Google Drives and Google Sheets.
 
 > [!NOTE]
 > **Total Time:** ~3 to 5 minutes.  
@@ -14,7 +14,7 @@ This guide walks you through creating a free **Google Cloud OAuth 2.0 Client ID*
 1. Navigate to the **[Google Cloud Console](https://console.cloud.google.com/)**.
 2. Sign in with your standard Google Account.
 3. In the top-left navigation bar, click the project dropdown and select **New Project**:
-   - **Project Name:** `SheetPulse Attendance` (or any name you prefer).
+   - **Project Name:** `OpenAttendance` (or any name you prefer).
    - **Location:** Leave as *No organization* (or select your organization).
 4. Click **Create** and wait a few seconds for the project to provision.
 5. Make sure your new project is selected in the top dropdown.
@@ -23,7 +23,7 @@ This guide walks you through creating a free **Google Cloud OAuth 2.0 Client ID*
 
 ## Step 2: Enable Google Sheets & Google Drive APIs
 
-SheetPulse requires access to the **Google Sheets API** (to append attendance logs and rollups) and the **Google Drive API** (to provision the spreadsheet file):
+OpenAttendance requires access to the **Google Sheets API** (to append attendance logs and rollups) and the **Google Drive API** (to provision the spreadsheet file):
 
 1. In the left navigation menu, go to **APIs & Services > Library**.
 2. In the search box, type **`Google Sheets API`** and select it.
@@ -44,7 +44,7 @@ Before creating credentials, Google requires basic information about the applica
    - **Internal:** Choose this only if you are using Google Workspace and strictly want members of your company domain to sign in.
 3. Click **Create**.
 4. Fill in the **App Information**:
-   - **App name:** `SheetPulse`
+   - **App name:** `OpenAttendance`
    - **User support email:** Select your Gmail address.
    - **Developer contact information:** Enter your email address.
    - *(Optional)* App logo: You can upload `public/icon.svg`.
@@ -55,7 +55,7 @@ Before creating credentials, Google requires basic information about the applica
      `.../auth/drive.file` (*"See, edit, create, and delete only the specific Google Drive files you use with this app"*).
    - Click **Update**, then click **Save and Continue**.
    > [!TIP]
-   > Why `drive.file`? This is Google's least-privilege scope. It guarantees that SheetPulse can **never** see or read your existing Drive files—only the attendance sheet it creates itself.
+   > Why `drive.file`? This is Google's least-privilege scope. It guarantees that OpenAttendance can **never** see or read your existing Drive files—only the attendance sheet it creates itself.
 7. On the **Test users** page:
    - While in "Testing" mode, add your own email address as a test user.
    - Click **Save and Continue**, then click **Back to Dashboard**.
@@ -69,7 +69,7 @@ Before creating credentials, Google requires basic information about the applica
 2. At the top of the screen, click **+ Create Credentials** and select **OAuth client ID**.
 3. In the form:
    - **Application type:** Select **Web application**.
-   - **Name:** `SheetPulse Web Client`.
+   - **Name:** `OpenAttendance Web Client`.
 4. Under **Authorized JavaScript origins**, click **+ Add URI** and add your app's URLs:
    - For Local Development:  
      `http://localhost:5174`  
@@ -84,7 +84,7 @@ Before creating credentials, Google requires basic information about the applica
    > Incorrect: `http://localhost:5174/` (Google will show an error).
 
 5. Under **Authorized redirect URIs**:
-   - Leave this **empty**! SheetPulse uses the modern Google Identity Services (GIS) token popup flow (`initTokenClient`), which only uses JavaScript Origins.
+   - Leave this **empty**! OpenAttendance uses the modern Google Identity Services (GIS) token popup flow (`initTokenClient`), which only uses JavaScript Origins.
 6. Click **Create**.
 7. A dialog will pop up showing:
    - **Client ID** (looks like `1234567890-abcdefghij.apps.googleusercontent.com`).
@@ -92,12 +92,12 @@ Before creating credentials, Google requires basic information about the applica
 
 ---
 
-## Step 5: Add the Client ID to SheetPulse
+## Step 5: Add the Client ID to OpenAttendance
 
 You can supply your Client ID in any of three convenient ways:
 
-### Method A: Directly inside the SheetPulse App (No code changes)
-1. Open SheetPulse in your browser ([http://localhost:5174/](http://localhost:5174/)).
+### Method A: Directly inside the OpenAttendance App (No code changes)
+1. Open OpenAttendance in your browser ([http://localhost:5174/](http://localhost:5174/)).
 2. If on the initial setup screen, paste your Client ID into the input field and click **Sign In with Google**.
 3. If already in Kiosk mode:
    - Click **Admin** (unlock with PIN `1234`).
@@ -128,8 +128,8 @@ Vite will automatically inject this into the build.
 
 ## Step 6: Verify and Auto-Provision
 
-1. In SheetPulse, click **Sign In with Google**.
+1. In OpenAttendance, click **Sign In with Google**.
 2. A Google authentication popup will appear asking for permission to create files in your Drive (`drive.file`).
 3. Click **Continue / Allow**.
 4. Click **Provision Master Database**.
-5. SheetPulse will create `_SheetPulse_Master_DB` in your Google Drive with all 5 tabs and display a direct link to your new spreadsheet!
+5. OpenAttendance will create `_OpenAttendance_Master_DB` in your Google Drive with all 5 tabs and display a direct link to your new spreadsheet!

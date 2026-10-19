@@ -24,7 +24,7 @@ export function generateSyntheticEmbedding(seed: string): number[] {
   return vec.map(v => Number((v / mag).toFixed(6)));
 }
 
-export class SheetPulseDatabase extends Dexie {
+export class OpenAttendanceDatabase extends Dexie {
   employees!: Table<Employee, string>;
   shifts!: Table<Shift, string>;
   attendance_logs!: Table<AttendanceLog, string>;
@@ -32,7 +32,7 @@ export class SheetPulseDatabase extends Dexie {
   meta!: Table<{ key: string; value: any; updated_at: string }, string>;
 
   constructor() {
-    super('SheetPulse_Master_DB');
+    super('OpenAttendance_Master_DB');
     this.version(1).stores({
       employees: 'emp_id, department, shift_id, status',
       shifts: 'shift_id',
@@ -43,7 +43,7 @@ export class SheetPulseDatabase extends Dexie {
   }
 }
 
-export const db = new SheetPulseDatabase();
+export const db = new OpenAttendanceDatabase();
 
 // Initial Seed Data
 const INITIAL_SHIFTS: Shift[] = [
@@ -143,7 +143,7 @@ const INITIAL_EMPLOYEES: Employee[] = [
 export async function initializeDatabase(): Promise<void> {
   const empCount = await db.employees.count();
   if (empCount === 0) {
-    console.log('[SheetPulse] Seeding initial roster, shifts, and cryptographic audit log...');
+    console.log('[OpenAttendance] Seeding initial roster, shifts, and cryptographic audit log...');
     await db.shifts.bulkAdd(INITIAL_SHIFTS);
     await db.employees.bulkAdd(INITIAL_EMPLOYEES);
 
@@ -214,7 +214,7 @@ export async function initializeDatabase(): Promise<void> {
         voice_enabled: true,
         sound_enabled: true,
         wake_lock_enabled: true,
-        spreadsheet_name: '_SheetPulse_Master_DB',
+        spreadsheet_name: '_OpenAttendance_Master_DB',
       } as MetaState,
       updated_at: new Date().toISOString(),
     });
@@ -236,7 +236,7 @@ export async function getSystemMeta(): Promise<MetaState> {
     voice_enabled: true,
     sound_enabled: true,
     wake_lock_enabled: true,
-    spreadsheet_name: '_SheetPulse_Master_DB',
+    spreadsheet_name: '_OpenAttendance_Master_DB',
   };
 }
 

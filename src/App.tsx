@@ -1,4 +1,4 @@
-// SheetPulse • Main Application Entry
+// OpenAttendance • Main Application Entry
 // Mobile-First PWA • Kiosk Locked Mode with Admin PIN • Google Setup Flow
 
 import { useState, useEffect, useCallback } from 'react';
@@ -123,7 +123,7 @@ export function App() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-          Loading SheetPulse...
+          Loading OpenAttendance...
         </div>
       </div>
     );
@@ -316,7 +316,7 @@ export function App() {
           color: 'var(--text-muted)',
         }}
       >
-        <div>SheetPulse • Zero-Server Biometric Attendance PWA</div>
+        <div>OpenAttendance • Zero-Server Biometric Attendance PWA</div>
         <div style={{ display: 'flex', gap: '14px' }}>
           <span>100% User Data Sovereignty</span>
           <span>•</span>

@@ -1,4 +1,4 @@
-// SheetPulse • Attendance Ledger (Clean, Minimal & Searchable)
+// OpenAttendance • Attendance Ledger (Clean, Minimal & Searchable)
 
 import React, { useState } from 'react';
 import { Search, Download, ShieldCheck, Copy, Check, Trash2 } from 'lucide-react';
@@ -58,7 +58,7 @@ export const AttendanceLedger: React.FC<AttendanceLedgerProps> = ({ logs, onRefr
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `SheetPulse_Ledger_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `OpenAttendance_Ledger_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
   };
 

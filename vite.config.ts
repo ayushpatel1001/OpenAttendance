@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
       manifest: {
-        name: 'SheetPulse • Biometric Attendance',
-        short_name: 'SheetPulse',
+        name: 'OpenAttendance • Biometric Attendance',
+        short_name: 'OpenAttendance',
         description: 'Zero-cost, local-first, privacy-centric attendance PWA backed by Google Drive & Sheets',
         theme_color: '#F8F9FA',
         background_color: '#F8F9FA',

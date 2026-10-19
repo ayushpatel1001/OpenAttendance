@@ -1,4 +1,4 @@
-// SheetPulse • Minimal Face ID Kiosk Terminal
+// OpenAttendance • Minimal Face ID Kiosk Terminal
 // Modern On-Device Biometrics • Clean HUD • Audio & Voice Confirmation
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';

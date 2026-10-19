@@ -1,4 +1,4 @@
-// SheetPulse • Personnel Roster (Clean, Minimal & Highly Editable)
+// OpenAttendance • Personnel Roster (Clean, Minimal & Highly Editable)
 
 import React, { useState, useRef } from 'react';
 import { UserPlus, Camera, Edit2, Trash2, Check, X, ShieldCheck, UserCheck, Search } from 'lucide-react';

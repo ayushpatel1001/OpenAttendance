@@ -6,9 +6,9 @@ Here is the complete **Product Requirements Document (PRD)**, **User Stories**, 
 
 ### 1.1 Product Vision & Value Proposition
 
-**Working Title:** *SheetPulse* (Bring-Your-Own-Backend Attendance System)
+**Working Title:** *OpenAttendance* (Bring-Your-Own-Backend Attendance System)
 **Core Philosophy:** **Zero Server, Zero Subscription, 100% Data Ownership.**
-Traditional SaaS attendance tools charge per-seat monthly fees and store sensitive biometric, geolocation, and employee roster data on third-party servers. *SheetPulse* ships as a purely static Progressive Web App (hosted free on Cloudflare Pages, GitHub Pages, or AWS Amplify). When an organization signs in via Google OAuth, the app provisions and manages all databases, logs, and automated reports directly inside **their own Google Drive**. The app developer has zero access to user data and pays **$0.00/month** in infrastructure costs, whether serving 10 or 10,000 organizations.
+Traditional SaaS attendance tools charge per-seat monthly fees and store sensitive biometric, geolocation, and employee roster data on third-party servers. *OpenAttendance* ships as a purely static Progressive Web App (hosted free on Cloudflare Pages, GitHub Pages, or AWS Amplify). When an organization signs in via Google OAuth, the app provisions and manages all databases, logs, and automated reports directly inside **their own Google Drive**. The app developer has zero access to user data and pays **$0.00/month** in infrastructure costs, whether serving 10 or 10,000 organizations.
 
 ### 1.2 Target Use Cases
 
@@ -63,7 +63,7 @@ By leveraging modern browser APIs and Google Sheets' native engine, we can pack 
 * **US 1.1 (Admin Onboarding):** *As an Admin, I want to click "Sign in with Google" and have the app automatically build my attendance database in my Google Drive so I don't have to configure servers or copy-paste templates.*
 * **Acceptance Criteria:**
 * Requests only `drive.file` scope.
-* Searches Drive for `_SheetPulse_Master_DB`. If absent, executes a single `spreadsheets.create` call that builds all 5 required tabs, freezes header rows, sets column widths, and applies data validation dropdowns.
+* Searches Drive for `_OpenAttendance_Master_DB`. If absent, executes a single `spreadsheets.create` call that builds all 5 required tabs, freezes header rows, sets column widths, and applies data validation dropdowns.
 
 
 
@@ -149,21 +149,21 @@ By leveraging modern browser APIs and Google Sheets' native engine, we can pack 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                   USER'S PERSONAL GOOGLE DRIVE & SHEETS API v4             │
 │                                                                            │
-│  📄 Master Spreadsheet: `_SheetPulse_Master_DB`                            │
+│  📄 Master Spreadsheet: `_OpenAttendance_Master_DB`                            │
 │     ├── Tab 1: `_Meta` (Distributed Mutex Lock, Schema Version, Checkpoints)│
 │     ├── Tab 2: `Employees` (ID, Name, Role, Shift_ID, PIN_Hash, Face_Vec)  │
 │     ├── Tab 3: `Shifts` (Shift_ID, Start, End, Grace_Mins, OT_Multiplier)  │
 │     ├── Tab 4: `Attendance_Log` (Append-only logs + SHA-256 chain hash)    │
 │     └── Tab 5: `Weekly_Reports` (Aggregated metrics per employee per week) │
 │                                                                            │
-│  📁 Folder: `SheetPulse_Weekly_Exports/` (Optional standalone weekly files)│
+│  📁 Folder: `OpenAttendance_Weekly_Exports/` (Optional standalone weekly files)│
 └────────────────────────────────────────────────────────────────────────────┘
 
 ```
 
 ---
 
-### 3.2 Google Sheets Database Schema (`_SheetPulse_Master_DB`)
+### 3.2 Google Sheets Database Schema (`_OpenAttendance_Master_DB`)
 
 #### 1. `_Meta` (System State & Distributed Lock Coordinator)
 

@@ -1,5 +1,5 @@
-// SheetPulse • Onboarding & Google Drive Setup Wizard
-// Guides the user to Sign In with Google, provision _SheetPulse_Master_DB, and configure the Admin PIN
+// OpenAttendance • Onboarding & Google Drive Setup Wizard
+// Guides the user to Sign In with Google, provision _OpenAttendance_Master_DB, and configure the Admin PIN
 
 import React, { useState } from 'react';
 import { Cloud, CheckCircle2, Zap, ExternalLink } from 'lucide-react';
@@ -50,7 +50,7 @@ export const OnboardingSetup: React.FC<OnboardingSetupProps> = ({ meta, onComple
   const handleProvisionSheet = async () => {
     if (accessToken) {
       setIsProvisioning(true);
-      setStatusMessage('Creating _SheetPulse_Master_DB with 5 tabs in your Google Drive...');
+      setStatusMessage('Creating _OpenAttendance_Master_DB with 5 tabs in your Google Drive...');
       try {
         const { spreadsheetId: newId, spreadsheetUrl: newUrl } =
           await googleSheetsService.provisionMasterSpreadsheet(accessToken);
@@ -109,9 +109,9 @@ export const OnboardingSetup: React.FC<OnboardingSetupProps> = ({ meta, onComple
         {/* Header */}
         <div style={{ padding: '28px 28px 20px 28px', borderBottom: '1px solid var(--border-light)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <div className="brand-icon">SP</div>
+            <div className="brand-icon">OA</div>
             <div>
-              <h2 style={{ fontSize: '20px', margin: 0 }}>SheetPulse Setup</h2>
+              <h2 style={{ fontSize: '20px', margin: 0 }}>OpenAttendance Setup</h2>
               <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                 Zero-server attendance backed 100% by your Google Drive
               </div>
@@ -146,7 +146,7 @@ export const OnboardingSetup: React.FC<OnboardingSetupProps> = ({ meta, onComple
                   Step 1: Connect Your Google Drive
                 </h3>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  SheetPulse uses Google OAuth with least-privilege <code>drive.file</code> scope. The app can only see and manage the specific attendance spreadsheets it creates.
+                  OpenAttendance uses Google OAuth with least-privilege <code>drive.file</code> scope. The app can only see and manage the specific attendance spreadsheets it creates.
                 </p>
               </div>
 
@@ -207,7 +207,7 @@ export const OnboardingSetup: React.FC<OnboardingSetupProps> = ({ meta, onComple
                   Step 2: Provision Database Sheets
                 </h3>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  SheetPulse will build <code>_SheetPulse_Master_DB</code> with all 5 required tabs (Meta, Employees, Shifts, Attendance_Log, Weekly_Reports) with frozen headers and formulas.
+                  OpenAttendance will build <code>_OpenAttendance_Master_DB</code> with all 5 required tabs (Meta, Employees, Shifts, Attendance_Log, Weekly_Reports) with frozen headers and formulas.
                 </p>
               </div>
 
@@ -287,7 +287,7 @@ export const OnboardingSetup: React.FC<OnboardingSetupProps> = ({ meta, onComple
                   Step 3: Set Kiosk Admin PIN
                 </h3>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  On mobile devices and wall-mounted tablets, SheetPulse locks into Face ID Kiosk mode. To access settings, roster, and reports, you will enter this 4-digit PIN.
+                  On mobile devices and wall-mounted tablets, OpenAttendance locks into Face ID Kiosk mode. To access settings, roster, and reports, you will enter this 4-digit PIN.
                 </p>
               </div>
 

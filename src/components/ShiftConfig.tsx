@@ -1,4 +1,4 @@
-// SheetPulse • Shift & Grace Rules (Minimal & Editable)
+// OpenAttendance • Shift & Grace Rules (Minimal & Editable)
 
 import React, { useState } from 'react';
 import { Plus, Check, X, Edit2, Trash2 } from 'lucide-react';

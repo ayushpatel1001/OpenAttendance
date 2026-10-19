@@ -1,4 +1,4 @@
-// SheetPulse • Minimal Executive Header with Kiosk Mode Lock
+// OpenAttendance • Minimal Executive Header with Kiosk Mode Lock
 
 import React from 'react';
 import { ShieldCheck, RefreshCw, Cloud, Lock, Unlock } from 'lucide-react';
@@ -37,10 +37,10 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="minimal-header">
       {/* Brand Identity */}
       <div className="header-brand">
-        <div className="brand-icon">SP</div>
+        <div className="brand-icon">OA</div>
         <div>
           <div className="brand-title">
-            SheetPulse
+            OpenAttendance
             <span className="brand-badge">
               {isAdminUnlocked ? 'Admin Mode' : 'Kiosk Active'}
             </span>

@@ -1,4 +1,4 @@
-# SheetPulse • Open-Source Biometric Attendance PWA
+# OpenAttendance • Open-Source Biometric Attendance PWA
 
 > **Zero Server. Zero Subscription. 100% Free & Open Source for anyone with a Google Account.**  
 > A simple, privacy-centric, local-first Progressive Web App (PWA) backed entirely by the user's personal Google Drive and Google Sheets, featuring on-device Face ID.
@@ -14,7 +14,7 @@
 
 Traditional attendance and time-tracking software charges per-seat monthly subscription fees ($3–$10/user/month) and stores sensitive employee biometric pictures on third-party servers.
 
-**SheetPulse** is a lightweight, zero-backend, client-side Progressive Web App (PWA) built for organizations, workshops, retail stores, and teams of all sizes:
+**OpenAttendance** is a lightweight, zero-backend, client-side Progressive Web App (PWA) built for organizations, workshops, retail stores, and teams of all sizes:
 - **Zero Server Costs ($0.00/month):** Runs completely in the browser and deploys free on GitHub Pages, Cloudflare Pages, or Vercel.
 - **100% Data Sovereignty:** When a user signs in with Google, all databases, rosters, and weekly payroll rollups are created and stored inside **their own Google Drive**.
 - **On-Device Face ID:** Camera frames are converted in real time into normalized **128-float mathematical embedding vectors**. Zero raw images or video streams are ever stored or sent over the network.
@@ -37,14 +37,14 @@ Traditional attendance and time-tracking software charges per-seat monthly subsc
    In Google Cloud Console, your Client ID is locked to specific **Authorized JavaScript origins** (e.g., `https://<your-username>.github.io` and `http://localhost:5174`). Other domains cannot use your Client ID.
 
 3. **Users Own Their Data:**  
-   When visitors on your GitHub Pages site click **"Sign In with Google"**, they authenticate with *their own* Google account. Because SheetPulse uses the least-privilege `https://www.googleapis.com/auth/drive.file` scope:
+   When visitors on your GitHub Pages site click **"Sign In with Google"**, they authenticate with *their own* Google account. Because OpenAttendance uses the least-privilege `https://www.googleapis.com/auth/drive.file` scope:
    - The app **only** accesses the specific spreadsheets it creates inside that visitor's personal Google Drive.
    - It cannot read their personal Drive files, and it does not write to your Drive.
 
 4. **Recommended Setup for GitHub Pages:**
    - Add your Google Client ID as an environment variable `VITE_GOOGLE_CLIENT_ID` in your repository secrets or `.env.production` file.
    - When visitors open your deployed app, the Client ID is automatically pre-filled, giving them an instant 1-click **"Sign In with Google"** and **"Auto-Provision Sheets"** onboarding experience!
-   - SheetPulse also allows any user to paste their own Client ID in **Drive Settings** if they choose to self-host.
+   - OpenAttendance also allows any user to paste their own Client ID in **Drive Settings** if they choose to self-host.
 
 ---
 
@@ -53,20 +53,20 @@ Traditional attendance and time-tracking software charges per-seat monthly subsc
 To generate a Google Client ID for your GitHub Pages deployment:
 
 1. Open the [Google Cloud Console](https://console.cloud.google.com/).
-2. Create a new project (e.g., `SheetPulse Attendance`).
+2. Create a new project (e.g., `OpenAttendance`).
 3. Enable the **Google Sheets API** and **Google Drive API**:
    - Go to **APIs & Services > Library**.
    - Search for **Google Sheets API** and click **Enable**.
    - Search for **Google Drive API** and click **Enable**.
 4. Configure the **OAuth Consent Screen**:
    - User Type: **External**.
-   - App Name: `SheetPulse Attendance`.
+   - App Name: `OpenAttendance`.
    - Developer Contact Email: Your email.
    - Scopes: Add `https://www.googleapis.com/auth/drive.file`.
 5. Create OAuth Credentials:
    - Go to **APIs & Services > Credentials > Create Credentials > OAuth client ID**.
    - Application type: **Web application**.
-   - Name: `SheetPulse Web Client`.
+   - Name: `OpenAttendance Web Client`.
    - **Authorized JavaScript origins**:
      - `http://localhost:5174` (for local development)
      - `https://<your-username>.github.io` (for GitHub Pages)
@@ -76,7 +76,7 @@ To generate a Google Client ID for your GitHub Pages deployment:
 
 ## 4. Google Sheets Database Schema
 
-SheetPulse automatically provisions `_SheetPulse_Master_DB` with 5 synchronized tabs:
+OpenAttendance automatically provisions `_OpenAttendance_Master_DB` with 5 synchronized tabs:
 
 1. **`_Meta`**: System state, distributed lease lock, schema version, and cryptographic chain tip.
 2. **`Employees`**: Roster, department, role, shift ID, and 128-float biometric vectors.
@@ -99,8 +99,8 @@ SheetPulse automatically provisions `_SheetPulse_Master_DB` with 5 synchronized 
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/attendance_sheets_pwa.git
-cd attendance_sheets_pwa
+git clone https://github.com/your-username/openattendance.git
+cd openattendance
 
 # Install dependencies
 npm install
@@ -123,7 +123,7 @@ Open [http://localhost:5174/](http://localhost:5174/) in your browser.
 Create `.github/workflows/deploy.yml` in your repository:
 
 ```yaml
-name: Deploy SheetPulse to GitHub Pages
+name: Deploy OpenAttendance to GitHub Pages
 
 on:
   push:

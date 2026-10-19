@@ -1,4 +1,4 @@
-// SheetPulse • Weekly Rollup & Reporting (Clean & Minimal)
+// OpenAttendance • Weekly Rollup & Reporting (Clean & Minimal)
 
 import React, { useState, useEffect } from 'react';
 import { Download, FileSpreadsheet, AlertCircle } from 'lucide-react';
@@ -34,7 +34,7 @@ export const WeeklyGazette: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `SheetPulse_Weekly_Report_${currentWeek}.csv`;
+    a.download = `OpenAttendance_Weekly_Report_${currentWeek}.csv`;
     a.click();
   };
 

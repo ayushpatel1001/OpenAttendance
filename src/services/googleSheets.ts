@@ -1,4 +1,4 @@
-// SheetPulse • Google Drive & Sheets API v4 Integration Engine
+// OpenAttendance • Google Drive & Sheets API v4 Integration Engine
 // Least-privilege 'drive.file' scope • 5-Tab Master DB Provisioning • Write-Batch Engine (Defeating 60 writes/min)
 
 import { db, getSystemMeta, updateSystemMeta } from './db';
@@ -62,7 +62,7 @@ class GoogleSheetsService {
     spreadsheetId: string;
     spreadsheetUrl: string;
   }> {
-    const title = '_SheetPulse_Master_DB';
+    const title = '_OpenAttendance_Master_DB';
 
     const createPayload = {
       properties: {
@@ -141,7 +141,7 @@ class GoogleSheetsService {
   private async populateInitialHeaders(spreadsheetId: string, accessToken: string): Promise<void> {
     const metaHeaders = [
       ['Key (Col A)', 'Value (Col B)', 'Updated_At (Col C)', 'Notes (Col D)'],
-      ['schema_version', '1.0.0', new Date().toISOString(), 'SheetPulse schema version'],
+      ['schema_version', '1.0.0', new Date().toISOString(), 'OpenAttendance schema version'],
       ['last_reported_week', '2026-W42', new Date().toISOString(), 'ISO week pointer'],
       ['report_lock', 'IDLE', new Date().toISOString(), 'Mutex lock state'],
       ['last_row_hash', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', new Date().toISOString(), 'Audit tip hash'],
@@ -286,7 +286,7 @@ class GoogleSheetsService {
     reportData: any[][],
     accessToken: string
   ): Promise<{ spreadsheetId: string; spreadsheetUrl: string }> {
-    const title = `SheetPulse_Weekly_Report_${isoWeek}`;
+    const title = `OpenAttendance_Weekly_Report_${isoWeek}`;
 
     const res = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
       method: 'POST',

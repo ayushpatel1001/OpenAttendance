@@ -1,4 +1,4 @@
-// SheetPulse • Shift & Rules Engine
+// OpenAttendance • Shift & Rules Engine
 // Double-Punch Prevention (< 3 min) • Late Arrival Grace Rules • SHA-256 Log Dispatch
 
 import { db, getSystemMeta, updateSystemMeta } from './db';

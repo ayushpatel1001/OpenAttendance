@@ -1,4 +1,4 @@
-// SheetPulse • Admin PIN Keypad Modal
+// OpenAttendance • Admin PIN Keypad Modal
 // Locks the admin panel on mobile and kiosks behind a 4-digit PIN
 
 import React, { useState } from 'react';

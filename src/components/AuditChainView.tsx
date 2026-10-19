@@ -1,4 +1,4 @@
-// SheetPulse • Cryptographic Audit Inspector (Clean & Minimal)
+// OpenAttendance • Cryptographic Audit Inspector (Clean & Minimal)
 
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, ShieldAlert, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
