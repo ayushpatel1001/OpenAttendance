@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" rx="64" fill="#FFF1E5"/>
+  <rect x="24" y="24" width="464" height="464" rx="44" fill="none" stroke="#141414" stroke-width="4"/>
+  <rect x="36" y="36" width="440" height="440" rx="36" fill="none" stroke="#990F3D" stroke-width="2"/>
+  
+  <!-- Corner Editorial Marks -->
+  <path d="M 60 100 L 60 60 L 100 60" fill="none" stroke="#141414" stroke-width="6"/>
+  <path d="M 412 60 L 452 60 L 452 100" fill="none" stroke="#141414" stroke-width="6"/>
+  <path d="M 60 412 L 60 452 L 100 452" fill="none" stroke="#141414" stroke-width="6"/>
+  <path d="M 412 452 L 452 452 L 452 412" fill="none" stroke="#141414" stroke-width="6"/>
+  
+  <!-- Biometric Face Reticle Circle -->
+  <circle cx="256" cy="236" r="130" fill="none" stroke="#990F3D" stroke-width="5" stroke-dasharray="16 8"/>
+  <circle cx="256" cy="236" r="148" fill="none" stroke="#141414" stroke-width="1.5" stroke-opacity="0.5"/>
+  
+  <!-- Crosshairs -->
+  <line x1="256" y1="70" x2="256" y2="120" stroke="#990F3D" stroke-width="4"/>
+  <line x1="256" y1="352" x2="256" y2="402" stroke="#990F3D" stroke-width="4"/>
+  <line x1="90" y1="236" x2="140" y2="236" stroke="#990F3D" stroke-width="4"/>
+  <line x1="372" y1="236" x2="422" y2="236" stroke="#990F3D" stroke-width="4"/>
+  
+  <!-- Stylized SP Serif Monogram -->
+  <text x="256" y="275" font-family="'Newsreader', 'Georgia', 'Playfair Display', serif" font-size="130" font-weight="900" fill="#141414" text-anchor="middle" letter-spacing="-4">SP</text>
+  
+  <!-- Bottom Editorial Ribbon -->
+  <rect x="90" y="405" width="332" height="42" fill="#990F3D" rx="4"/>
+  <text x="256" y="433" font-family="'Inter', -apple-system, sans-serif" font-size="18" font-weight="800" fill="#FFF1E5" text-anchor="middle" letter-spacing="4">SHEETPULSE • FT</text>
+</svg>
