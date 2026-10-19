@@ -310,6 +310,34 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
 }
 
+.btn-google {
+  background-color: #FFFFFF;
+  color: #1F2937;
+  border: 1px solid #D1D5DB;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-weight: 600;
+  padding: 11px 20px;
+  font-size: 14px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all 0.18s ease;
+  cursor: pointer;
+  width: 100%;
+  outline: none;
+}
+.btn-google:hover {
+  background-color: #F9FAFB;
+  border-color: #9CA3AF;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+.btn-google:active {
+  transform: translateY(0);
+}
+
 /* Modern Status Pills */
 .status-pill {
   display: inline-flex;
