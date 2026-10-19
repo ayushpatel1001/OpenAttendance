@@ -11,6 +11,6 @@
   <path d="M 170 312 L 170 342 L 200 342" fill="none" stroke="#10B981" stroke-width="6" stroke-linecap="round"/>
   <path d="M 312 342 L 342 342 L 342 312" fill="none" stroke="#10B981" stroke-width="6" stroke-linecap="round"/>
   
-  <!-- Modern Clean Typography SP Monogram -->
-  <text x="256" y="295" font-family="-apple-system, 'Plus Jakarta Sans', system-ui, sans-serif" font-size="124" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="-6">SP</text>
+  <!-- Modern Clean Typography OA Monogram -->
+  <text x="256" y="295" font-family="-apple-system, 'Plus Jakarta Sans', system-ui, sans-serif" font-size="124" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="-6">OA</text>
 </svg>

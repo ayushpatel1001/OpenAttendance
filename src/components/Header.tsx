@@ -1,7 +1,7 @@
 // OpenAttendance • Minimal Executive Header with Kiosk Mode Lock
 
-import React from 'react';
-import { ShieldCheck, RefreshCw, Cloud, Lock, Unlock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, RefreshCw, Cloud, Lock, Unlock, Download } from 'lucide-react';
 import type { MetaState } from '../types';
 
 interface HeaderProps {
@@ -29,6 +29,26 @@ export const Header: React.FC<HeaderProps> = ({
   onRefreshSync,
   isSyncing,
 }) => {
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
+
   const attendanceRate = totalEmployeesCount > 0 
     ? Math.round((activeEmployeesCount / totalEmployeesCount) * 100) 
     : 100;
@@ -89,6 +109,19 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
             {isSyncing ? 'Syncing...' : 'Sync'}
+          </button>
+        )}
+
+        {/* PWA Install Button (shown when browser offers installation) */}
+        {deferredPrompt && (
+          <button
+            onClick={handleInstallClick}
+            className="btn-modern btn-primary"
+            style={{ padding: '5px 12px', fontSize: '12px', gap: '5px' }}
+            title="Install OpenAttendance as a PWA app"
+          >
+            <Download size={13} />
+            Install App
           </button>
         )}
 
