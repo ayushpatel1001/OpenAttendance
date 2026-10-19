@@ -1,5 +1,5 @@
 // SheetPulse • Main Application Entry
-// Modern Minimalist Biometric Attendance PWA
+// Mobile-First PWA • Kiosk Locked Mode with Admin PIN • Google Setup Flow
 
 import { useState, useEffect, useCallback } from 'react';
 import {
@@ -24,6 +24,8 @@ import { ShiftConfig } from './components/ShiftConfig';
 import { WeeklyGazette } from './components/WeeklyGazette';
 import { AuditChainView } from './components/AuditChainView';
 import { GoogleSyncSettings } from './components/GoogleSyncSettings';
+import { AdminPinModal } from './components/AdminPinModal';
+import { OnboardingSetup } from './components/OnboardingSetup';
 
 type NavTab = 'kiosk' | 'ledger' | 'roster' | 'shifts' | 'reports' | 'audit' | 'sync';
 
@@ -37,6 +39,11 @@ export function App() {
   const [isChainValid, setIsChainValid] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Kiosk & Admin Lock States
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState<boolean>(false);
+  const [isPinModalOpen, setIsPinModalOpen] = useState<boolean>(false);
+  const [showSetupWizard, setShowSetupWizard] = useState<boolean>(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -56,6 +63,11 @@ export function App() {
     setLogs(lgs);
     setMeta(m);
     setPendingSyncCount(outboxCount);
+
+    // If setup never completed, flag onboarding
+    if (!m.is_setup_completed && !m.spreadsheet_id) {
+      setShowSetupWizard(true);
+    }
 
     const chainRes = await verifyAuditChain(lgs);
     setIsChainValid(chainRes.isValid);
@@ -86,6 +98,15 @@ export function App() {
     await refreshData();
   };
 
+  const handleCompleteSetup = async (updatedMeta: Partial<MetaState>) => {
+    await updateSystemMeta(updatedMeta);
+    setShowSetupWizard(false);
+    setIsAdminUnlocked(false);
+    setActiveTab('kiosk');
+    showToast('Setup complete! Kiosk mode engaged.');
+    await refreshData();
+  };
+
   const handleFlushOutbox = async () => {
     setIsSyncing(true);
     const res = await googleSheetsService.flushOutboxQueue();
@@ -108,79 +129,98 @@ export function App() {
     );
   }
 
+  // First-time Setup Wizard
+  if (showSetupWizard) {
+    return (
+      <OnboardingSetup
+        meta={meta}
+        onCompleteSetup={handleCompleteSetup}
+      />
+    );
+  }
+
   const activeEmployeesCount = employees.filter(e => e.status === 'ACTIVE').length;
 
   return (
     <div className="app-container">
-      {/* Minimal Header */}
+      {/* Header Bar */}
       <Header
         meta={meta}
         pendingSyncCount={pendingSyncCount}
         activeEmployeesCount={activeEmployeesCount}
         totalEmployeesCount={employees.length}
         chainValid={isChainValid}
+        isAdminUnlocked={isAdminUnlocked}
+        onOpenPinModal={() => setIsPinModalOpen(true)}
+        onLockAdmin={() => {
+          setIsAdminUnlocked(false);
+          setActiveTab('kiosk');
+          showToast('Kiosk locked. Admin settings hidden.');
+        }}
         onRefreshSync={handleFlushOutbox}
         isSyncing={isSyncing}
       />
 
-      {/* Modern Minimal Navigation Bar */}
-      <nav className="minimal-nav">
-        <button
-          onClick={() => setActiveTab('kiosk')}
-          className={`nav-pill ${activeTab === 'kiosk' ? 'active' : ''}`}
-        >
-          <Camera size={15} />
-          Face ID Kiosk
-        </button>
+      {/* Admin Navigation Tabs (Only visible when unlocked!) */}
+      {isAdminUnlocked && (
+        <nav className="minimal-nav">
+          <button
+            onClick={() => setActiveTab('kiosk')}
+            className={`nav-pill ${activeTab === 'kiosk' ? 'active' : ''}`}
+          >
+            <Camera size={15} />
+            Face ID Kiosk
+          </button>
 
-        <button
-          onClick={() => setActiveTab('ledger')}
-          className={`nav-pill ${activeTab === 'ledger' ? 'active' : ''}`}
-        >
-          <BookOpen size={15} />
-          Event Ledger ({logs.length})
-        </button>
+          <button
+            onClick={() => setActiveTab('ledger')}
+            className={`nav-pill ${activeTab === 'ledger' ? 'active' : ''}`}
+          >
+            <BookOpen size={15} />
+            Ledger ({logs.length})
+          </button>
 
-        <button
-          onClick={() => setActiveTab('roster')}
-          className={`nav-pill ${activeTab === 'roster' ? 'active' : ''}`}
-        >
-          <Users size={15} />
-          Personnel ({employees.length})
-        </button>
+          <button
+            onClick={() => setActiveTab('roster')}
+            className={`nav-pill ${activeTab === 'roster' ? 'active' : ''}`}
+          >
+            <Users size={15} />
+            Personnel ({employees.length})
+          </button>
 
-        <button
-          onClick={() => setActiveTab('shifts')}
-          className={`nav-pill ${activeTab === 'shifts' ? 'active' : ''}`}
-        >
-          <Clock size={15} />
-          Shifts & Grace
-        </button>
+          <button
+            onClick={() => setActiveTab('shifts')}
+            className={`nav-pill ${activeTab === 'shifts' ? 'active' : ''}`}
+          >
+            <Clock size={15} />
+            Shifts
+          </button>
 
-        <button
-          onClick={() => setActiveTab('reports')}
-          className={`nav-pill ${activeTab === 'reports' ? 'active' : ''}`}
-        >
-          <TrendingUp size={15} />
-          Weekly Rollup
-        </button>
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={`nav-pill ${activeTab === 'reports' ? 'active' : ''}`}
+          >
+            <TrendingUp size={15} />
+            Weekly Rollup
+          </button>
 
-        <button
-          onClick={() => setActiveTab('audit')}
-          className={`nav-pill ${activeTab === 'audit' ? 'active' : ''}`}
-        >
-          <ShieldCheck size={15} />
-          Audit Chain
-        </button>
+          <button
+            onClick={() => setActiveTab('audit')}
+            className={`nav-pill ${activeTab === 'audit' ? 'active' : ''}`}
+          >
+            <ShieldCheck size={15} />
+            Audit Chain
+          </button>
 
-        <button
-          onClick={() => setActiveTab('sync')}
-          className={`nav-pill ${activeTab === 'sync' ? 'active' : ''}`}
-        >
-          <Cloud size={15} />
-          Google Sync
-        </button>
-      </nav>
+          <button
+            onClick={() => setActiveTab('sync')}
+            className={`nav-pill ${activeTab === 'sync' ? 'active' : ''}`}
+          >
+            <Cloud size={15} />
+            Drive Settings
+          </button>
+        </nav>
+      )}
 
       {/* Toast Notification */}
       {toastMessage && (
@@ -208,7 +248,8 @@ export function App() {
 
       {/* Main Content Area */}
       <main style={{ flex: 1 }}>
-        {activeTab === 'kiosk' && (
+        {/* In locked mode, always show the Kiosk */}
+        {(!isAdminUnlocked || activeTab === 'kiosk') && (
           <KioskScanner
             employees={employees}
             meta={meta}
@@ -217,11 +258,11 @@ export function App() {
           />
         )}
 
-        {activeTab === 'ledger' && (
+        {isAdminUnlocked && activeTab === 'ledger' && (
           <AttendanceLedger logs={logs} onRefresh={refreshData} />
         )}
 
-        {activeTab === 'roster' && (
+        {isAdminUnlocked && activeTab === 'roster' && (
           <PersonnelRoster
             employees={employees}
             shifts={shifts}
@@ -229,25 +270,38 @@ export function App() {
           />
         )}
 
-        {activeTab === 'shifts' && (
+        {isAdminUnlocked && activeTab === 'shifts' && (
           <ShiftConfig shifts={shifts} onRefreshShifts={refreshData} />
         )}
 
-        {activeTab === 'reports' && <WeeklyGazette />}
+        {isAdminUnlocked && activeTab === 'reports' && <WeeklyGazette />}
 
-        {activeTab === 'audit' && <AuditChainView logs={logs} />}
+        {isAdminUnlocked && activeTab === 'audit' && <AuditChainView logs={logs} />}
 
-        {activeTab === 'sync' && (
+        {isAdminUnlocked && activeTab === 'sync' && (
           <GoogleSyncSettings
             meta={meta}
             onUpdateMeta={handleUpdateMeta}
             onFlushOutbox={handleFlushOutbox}
+            onRerunSetup={() => setShowSetupWizard(true)}
             isSyncing={isSyncing}
           />
         )}
       </main>
 
-      {/* Minimal Footer */}
+      {/* Admin PIN Unlock Modal */}
+      <AdminPinModal
+        isOpen={isPinModalOpen}
+        correctPin={meta.admin_pin || '1234'}
+        onSuccess={() => {
+          setIsAdminUnlocked(true);
+          setIsPinModalOpen(false);
+          showToast('Admin panel unlocked');
+        }}
+        onClose={() => setIsPinModalOpen(false)}
+      />
+
+      {/* Footer */}
       <footer
         style={{
           marginTop: '36px',
@@ -262,9 +316,7 @@ export function App() {
           color: 'var(--text-muted)',
         }}
       >
-        <div>
-          SheetPulse • Zero-Server Biometric Attendance PWA
-        </div>
+        <div>SheetPulse • Zero-Server Biometric Attendance PWA</div>
         <div style={{ display: 'flex', gap: '14px' }}>
           <span>100% User Data Sovereignty</span>
           <span>•</span>

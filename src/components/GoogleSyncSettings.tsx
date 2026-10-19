@@ -10,6 +10,7 @@ interface GoogleSyncSettingsProps {
   meta: MetaState;
   onUpdateMeta: (partial: Partial<MetaState>) => void;
   onFlushOutbox: () => void;
+  onRerunSetup?: () => void;
   isSyncing: boolean;
 }
 
@@ -17,6 +18,7 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
   meta,
   onUpdateMeta,
   onFlushOutbox,
+  onRerunSetup,
   isSyncing,
 }) => {
   const [clientId, setClientId] = useState(meta.google_client_id || '');
@@ -304,7 +306,7 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
         </div>
 
         <div className="card-body-clean">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
             <div>
               <label className="clean-label">KIOSK DEVICE NAME</label>
               <input
@@ -313,6 +315,29 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
                 onChange={e => onUpdateMeta({ kiosk_device_id: e.target.value })}
                 className="clean-input"
               />
+            </div>
+
+            <div>
+              <label className="clean-label">4-DIGIT ADMIN PIN</label>
+              <input
+                type="password"
+                maxLength={4}
+                value={meta.admin_pin || '1234'}
+                onChange={e => onUpdateMeta({ admin_pin: e.target.value.replace(/\D/g, '') })}
+                className="clean-input"
+                style={{ letterSpacing: '4px', fontFamily: 'var(--font-mono)' }}
+              />
+            </div>
+
+            <div>
+              <label className="clean-label">SETUP WIZARD</label>
+              <button
+                onClick={onRerunSetup}
+                className="btn-modern btn-secondary"
+                style={{ width: '100%' }}
+              >
+                Re-run Setup Wizard
+              </button>
             </div>
 
             <div>

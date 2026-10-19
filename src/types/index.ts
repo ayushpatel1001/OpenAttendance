@@ -70,6 +70,8 @@ export interface MetaState {
   voice_enabled: boolean;
   sound_enabled: boolean;
   wake_lock_enabled: boolean;
+  is_setup_completed?: boolean;
+  admin_pin?: string;
 }
 
 export interface WeeklyRollupRow {

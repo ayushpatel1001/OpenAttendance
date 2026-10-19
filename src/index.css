@@ -499,3 +499,56 @@ h1, h2, h3, h4, h5, h6 {
 .pulse-ring {
   animation: pulseRing 2s infinite ease-in-out;
 }
+
+/* Mobile-First PWA Responsive Styles */
+@media (max-width: 640px) {
+  .app-container {
+    padding: 0.75rem 0.75rem 2rem 0.75rem;
+  }
+
+  .minimal-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .header-brand {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .camera-terminal {
+    aspect-ratio: 3 / 4;
+    max-width: 100%;
+  }
+
+  .camera-reticle {
+    width: 180px;
+    height: 230px;
+  }
+
+  .card-header-clean {
+    padding: 12px 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .card-body-clean {
+    padding: 14px;
+  }
+
+  .minimal-nav {
+    position: sticky;
+    top: 6px;
+    z-index: 50;
+    margin-bottom: 16px;
+  }
+}
+

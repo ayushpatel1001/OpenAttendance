@@ -1,7 +1,7 @@
-// SheetPulse • Minimal Executive Header
+// SheetPulse • Minimal Executive Header with Kiosk Mode Lock
 
 import React from 'react';
-import { ShieldCheck, RefreshCw, Cloud } from 'lucide-react';
+import { ShieldCheck, RefreshCw, Cloud, Lock, Unlock } from 'lucide-react';
 import type { MetaState } from '../types';
 
 interface HeaderProps {
@@ -10,6 +10,9 @@ interface HeaderProps {
   activeEmployeesCount: number;
   totalEmployeesCount: number;
   chainValid: boolean;
+  isAdminUnlocked: boolean;
+  onOpenPinModal: () => void;
+  onLockAdmin: () => void;
   onRefreshSync: () => void;
   isSyncing: boolean;
 }
@@ -20,6 +23,9 @@ export const Header: React.FC<HeaderProps> = ({
   activeEmployeesCount,
   totalEmployeesCount,
   chainValid,
+  isAdminUnlocked,
+  onOpenPinModal,
+  onLockAdmin,
   onRefreshSync,
   isSyncing,
 }) => {
@@ -35,15 +41,17 @@ export const Header: React.FC<HeaderProps> = ({
         <div>
           <div className="brand-title">
             SheetPulse
-            <span className="brand-badge">Face ID</span>
+            <span className="brand-badge">
+              {isAdminUnlocked ? 'Admin Mode' : 'Kiosk Active'}
+            </span>
           </div>
           <div className="brand-subtitle">
-            Zero-server biometric attendance backed by Google Drive & Sheets
+            Zero-server attendance backed by Google Drive & Sheets
           </div>
         </div>
       </div>
 
-      {/* Live Status Indicators & Controls */}
+      {/* Status & Kiosk Lock Action */}
       <div className="header-actions">
         {/* Presence Ratio */}
         <div className="status-pill pill-gray" title="Today's attendance ratio">
@@ -54,33 +62,58 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Audit Chain */}
         <div className={`status-pill ${chainValid ? 'pill-green' : 'pill-red'}`}>
           <ShieldCheck size={13} />
-          <span>{chainValid ? 'Chain Verified' : 'Integrity Mismatch'}</span>
+          <span>{chainValid ? 'Verified' : 'Tampered'}</span>
         </div>
 
         {/* Google Drive Status */}
         <div className={`status-pill ${meta.spreadsheet_id ? 'pill-blue' : 'pill-gray'}`}>
           <Cloud size={13} />
-          <span>{meta.spreadsheet_id ? 'Drive Connected' : 'Local Mode'}</span>
+          <span>{meta.spreadsheet_id ? 'Drive' : 'Local'}</span>
         </div>
 
         {/* Pending Outbox Queue */}
         {pendingSyncCount > 0 && (
           <div className="status-pill pill-amber">
-            <span>{pendingSyncCount} in Outbox</span>
+            <span>{pendingSyncCount} Outbox</span>
           </div>
         )}
 
-        {/* Flush Button */}
-        <button
-          onClick={onRefreshSync}
-          disabled={isSyncing}
-          className="btn-modern btn-secondary"
-          style={{ padding: '5px 10px', fontSize: '12px' }}
-          title="Flush pending punches to Google Sheets"
-        >
-          <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
-          {isSyncing ? 'Syncing...' : 'Sync Now'}
-        </button>
+        {/* Flush Button (only if admin unlocked or pending) */}
+        {isAdminUnlocked && (
+          <button
+            onClick={onRefreshSync}
+            disabled={isSyncing}
+            className="btn-modern btn-secondary"
+            style={{ padding: '5px 10px', fontSize: '12px' }}
+            title="Flush pending punches to Google Sheets"
+          >
+            <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
+            {isSyncing ? 'Syncing...' : 'Sync'}
+          </button>
+        )}
+
+        {/* Admin PIN Lock / Unlock Button */}
+        {isAdminUnlocked ? (
+          <button
+            onClick={onLockAdmin}
+            className="btn-modern btn-secondary"
+            style={{ padding: '5px 12px', fontSize: '12px', gap: '5px', fontWeight: 600 }}
+            title="Lock kiosk and hide admin settings"
+          >
+            <Lock size={13} color="var(--accent-red)" />
+            Lock Kiosk
+          </button>
+        ) : (
+          <button
+            onClick={onOpenPinModal}
+            className="btn-modern btn-secondary"
+            style={{ padding: '5px 12px', fontSize: '12px', gap: '5px' }}
+            title="Unlock admin panel with PIN"
+          >
+            <Unlock size={13} />
+            Admin
+          </button>
+        )}
       </div>
     </header>
   );
