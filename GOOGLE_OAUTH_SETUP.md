@@ -77,6 +77,9 @@ Before creating credentials, Google requires basic information about the applica
    - For GitHub Pages:  
      `https://<your-username>.github.io`  
      *(replace `<your-username>` with your actual GitHub username)*
+   - For AWS Amplify Hosting:  
+     `https://main.<app-id>.amplifyapp.com`  
+     *(or your custom domain, e.g., `https://attendance.yourdomain.com`)*
 
    > [!CAUTION]
    > **Do NOT include a trailing slash (`/`)!**  
@@ -123,6 +126,15 @@ Vite will automatically inject this into the build.
    - **Value:** `1234567890-abcdefghij.apps.googleusercontent.com`
 4. Click **Add secret**.
 5. When `.github/workflows/deploy.yml` runs, it will bake the Client ID into the GitHub Pages build automatically!
+
+---
+
+### Method D: For AWS Amplify Hosting
+1. In the **AWS Amplify Console**, go to **App settings > Environment variables**.
+2. Click **Manage variables** and add:
+   - **Key:** `VITE_GOOGLE_CLIENT_ID`
+   - **Value:** `1234567890-abcdefghij.apps.googleusercontent.com`
+3. Click **Save** and trigger a redeploy. Read [AMPLIFY_SETUP.md](file:///Users/ayushpatel/Code/vibe_coded_apps/attendance_sheets_pwa/AMPLIFY_SETUP.md) for full instructions.
 
 ---
 

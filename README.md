@@ -181,6 +181,22 @@ jobs:
 
 ---
 
-## 8. License
+## 8. Deploying to AWS Amplify Hosting
+
+OpenAttendance includes a pre-configured [amplify.yml](file:///Users/ayushpatel/Code/vibe_coded_apps/attendance_sheets_pwa/amplify.yml) build specification for AWS Amplify Hosting:
+
+1. In the **AWS Amplify Console**, click **Host web app** and connect your GitHub repository (`ayushpatel1001/OpenAttendance`).
+2. Amplify will auto-detect `amplify.yml` and build with `dist/`.
+3. Under **App settings > Environment variables**, add:
+   - **Key:** `VITE_GOOGLE_CLIENT_ID`
+   - **Value:** `<your-google-oauth-client-id>.apps.googleusercontent.com`
+4. In Google Cloud Console, add your Amplify domain (e.g. `https://main.<app-id>.amplifyapp.com`) to **Authorized JavaScript origins**.
+
+For full walkthrough with screenshots and custom domain setup, read the **[AWS Amplify Setup Guide](file:///Users/ayushpatel/Code/vibe_coded_apps/attendance_sheets_pwa/AMPLIFY_SETUP.md)**.
+
+---
+
+## 9. License
 
 Released under the **MIT License**. Free for personal, commercial, and open-source use.
+
