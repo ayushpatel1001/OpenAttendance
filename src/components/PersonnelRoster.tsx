@@ -1,8 +1,7 @@
-// Personnel Roster & Live Face ID Enrollment Modal
-// 100% In-Browser Enrollment • Zero Raw Biometric Image Storage • 128-D Vector Extraction
+// SheetPulse • Personnel Roster (Clean, Minimal & Highly Editable)
 
 import React, { useState, useRef } from 'react';
-import { UserPlus, Camera, Check, X, ShieldCheck, Sparkles, UserCheck } from 'lucide-react';
+import { UserPlus, Camera, Edit2, Trash2, Check, X, ShieldCheck, UserCheck, Search } from 'lucide-react';
 import type { Employee, Shift } from '../types';
 import { db, generateSyntheticEmbedding } from '../services/db';
 import { faceIdEngine } from '../services/faceEngine';
@@ -19,25 +18,99 @@ export const PersonnelRoster: React.FC<PersonnelRosterProps> = ({
   shifts,
   onRefreshRoster,
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modals
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [enrollTarget, setEnrollTarget] = useState<Employee | null>(null);
-  const [enrollStep, setEnrollStep] = useState<number>(1);
+  const [enrollStep, setEnrollStep] = useState(1);
   const [enrollError, setEnrollError] = useState<string | null>(null);
-  const [enrollSuccess, setEnrollSuccess] = useState<boolean>(false);
-  const [isCapturing, setIsCapturing] = useState<boolean>(false);
+  const [enrollSuccess, setEnrollSuccess] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
 
-  // Add Employee Modal
-  const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
-  const [newEmpId, setNewEmpId] = useState('');
-  const [newName, setNewName] = useState('');
-  const [newDept, setNewDept] = useState('Quantitative Analytics');
-  const [newRole, setNewRole] = useState('');
-  const [newShiftId, setNewShiftId] = useState(shifts[0]?.shift_id || 'SH-MORN');
-  const [newRate, setNewRate] = useState('75.00');
+  // Form states
+  const [formEmpId, setFormEmpId] = useState('');
+  const [formName, setFormName] = useState('');
+  const [formDept, setFormDept] = useState('Engineering');
+  const [formRole, setFormRole] = useState('');
+  const [formShiftId, setFormShiftId] = useState(shifts[0]?.shift_id || 'SH-MORN');
+  const [formRate, setFormRate] = useState('65.00');
 
   const enrollVideoRef = useRef<HTMLVideoElement | null>(null);
   const capturedVectorsRef = useRef<number[][]>([]);
 
-  // Open Enrollment Modal
+  // Open Edit Modal
+  const openEditModal = (emp: Employee) => {
+    setEditingEmployee(emp);
+    setFormEmpId(emp.emp_id);
+    setFormName(emp.full_name);
+    setFormDept(emp.department);
+    setFormRole(emp.role);
+    setFormShiftId(emp.shift_id);
+    setFormRate(emp.hourly_rate?.toString() || '65.00');
+  };
+
+  // Open Add Modal
+  const openAddModal = () => {
+    setEditingEmployee(null);
+    setFormEmpId(`EMP-0${employees.length + 1}`);
+    setFormName('');
+    setFormDept('Engineering');
+    setFormRole('');
+    setFormShiftId(shifts[0]?.shift_id || 'SH-MORN');
+    setFormRate('65.00');
+    setIsAddModalOpen(true);
+  };
+
+  // Save (Create or Update)
+  const handleSaveEmployee = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formName.trim()) return;
+
+    if (editingEmployee) {
+      // Update existing
+      await db.employees.update(editingEmployee.emp_id, {
+        full_name: formName.trim(),
+        department: formDept,
+        role: formRole.trim() || 'Associate',
+        shift_id: formShiftId,
+        hourly_rate: parseFloat(formRate) || 65.0,
+      });
+      setEditingEmployee(null);
+    } else {
+      // Add new
+      const empId = formEmpId.trim() || `EMP-0${employees.length + 1}`;
+      const syntheticVector = generateSyntheticEmbedding(formName + ' ' + empId);
+
+      const newEmp: Employee = {
+        emp_id: empId,
+        full_name: formName.trim(),
+        department: formDept,
+        role: formRole.trim() || 'Associate',
+        shift_id: formShiftId,
+        status: 'ACTIVE',
+        face_descriptor: syntheticVector,
+        face_enrolled: true,
+        hourly_rate: parseFloat(formRate) || 65.0,
+        avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+      };
+      await db.employees.put(newEmp);
+      setIsAddModalOpen(false);
+    }
+
+    onRefreshRoster();
+  };
+
+  // Delete Employee
+  const handleDeleteEmployee = async (empId: string, name: string) => {
+    if (confirm(`Are you sure you want to remove ${name} from the roster?`)) {
+      await db.employees.delete(empId);
+      onRefreshRoster();
+    }
+  };
+
+  // Start Enrollment
   const startEnrollment = async (emp: Employee) => {
     setEnrollTarget(emp);
     setEnrollStep(1);
@@ -56,7 +129,6 @@ export const PersonnelRoster: React.FC<PersonnelRosterProps> = ({
     }, 150);
   };
 
-  // Close Enrollment Modal
   const closeEnrollment = () => {
     if (enrollVideoRef.current) {
       faceIdEngine.stopCamera(enrollVideoRef.current);
@@ -64,7 +136,6 @@ export const PersonnelRoster: React.FC<PersonnelRosterProps> = ({
     setEnrollTarget(null);
   };
 
-  // Capture Biometric Frame
   const captureEnrollmentFrame = async () => {
     if (!enrollVideoRef.current || !enrollTarget) return;
 
@@ -74,7 +145,6 @@ export const PersonnelRoster: React.FC<PersonnelRosterProps> = ({
     const { vector, faceDetected } = faceIdEngine.extractEmbeddingFromVideo(enrollVideoRef.current);
 
     if (!faceDetected || vector.length !== 128) {
-      // Fallback: If camera lighting or environment is dim, generate valid mathematical signature
       const fallbackVec = generateSyntheticEmbedding(enrollTarget.full_name + Date.now());
       capturedVectorsRef.current.push(fallbackVec);
     } else {
@@ -85,7 +155,6 @@ export const PersonnelRoster: React.FC<PersonnelRosterProps> = ({
       setEnrollStep(prev => prev + 1);
       setIsCapturing(false);
     } else {
-      // Compute Centroid (Average) of the 3 captured 128-d vectors
       const centroid: number[] = new Array(128).fill(0);
       for (const v of capturedVectorsRef.current) {
         for (let i = 0; i < 128; i++) {
@@ -93,13 +162,11 @@ export const PersonnelRoster: React.FC<PersonnelRosterProps> = ({
         }
       }
 
-      // Normalize centroid
       let sumSq = 0;
       for (let i = 0; i < 128; i++) sumSq += centroid[i] * centroid[i];
       const mag = Math.sqrt(sumSq) || 1;
       const finalVector = centroid.map(val => Number((val / mag).toFixed(6)));
 
-      // Save to IndexedDB
       await db.employees.update(enrollTarget.emp_id, {
         face_descriptor: finalVector,
         face_enrolled: true,
@@ -114,422 +181,237 @@ export const PersonnelRoster: React.FC<PersonnelRosterProps> = ({
 
       setTimeout(() => {
         closeEnrollment();
-      }, 1800);
+      }, 1600);
     }
   };
 
-  // Quick Synthetic Enrollment
-  const quickEnrollSynthetic = async (emp: Employee) => {
-    const vector = generateSyntheticEmbedding(emp.full_name + ' FT-ENROLL');
-    await db.employees.update(emp.emp_id, {
-      face_descriptor: vector,
-      face_enrolled: true,
-    });
-    audioService.playSuccessChime();
-    onRefreshRoster();
-  };
-
-  // Add Employee Handler
-  const handleAddEmployee = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newName) return;
-
-    const empId = newEmpId.trim() || `EMP-0${employees.length + 1}`;
-    const syntheticVector = generateSyntheticEmbedding(newName + ' ' + empId);
-
-    const newEmp: Employee = {
-      emp_id: empId,
-      full_name: newName.trim(),
-      department: newDept,
-      role: newRole.trim() || 'Associate',
-      shift_id: newShiftId,
-      status: 'ACTIVE',
-      face_descriptor: syntheticVector,
-      face_enrolled: true,
-      hourly_rate: parseFloat(newRate) || 65.0,
-      avatar_url: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80`,
-    };
-
-    await db.employees.put(newEmp);
-    onRefreshRoster();
-    setIsAddModalOpen(false);
-    setNewName('');
-    setNewEmpId('');
-    setNewRole('');
-  };
+  const filteredEmployees = employees.filter(emp =>
+    emp.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.emp_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.department.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="ft-card ft-card-editorial">
-      <div className="ft-card-header">
-        <div>
-          <div className="ft-card-title">
-            <span>PERSONNEL ROSTER & BIOMETRIC ENROLLMENT</span>
-            <span className="badge-ft badge-ft-dark">{employees.length} ENROLLED</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="modern-card">
+        <div className="card-header-clean">
+          <div>
+            <div className="card-title-clean">
+              Personnel Roster
+              <span className="status-pill pill-gray">{employees.length} Members</span>
+            </div>
+            <div className="card-subtitle-clean">
+              Manage employees, assigned shifts, and on-device Face ID biometric enrollment
+            </div>
           </div>
-          <div className="ft-card-subtitle">
-            Zero-Image Storage Architecture: Employees mapped to 128-float mathematical vectors
+
+          <button onClick={openAddModal} className="btn-modern btn-primary">
+            <UserPlus size={14} />
+            Add Employee
+          </button>
+        </div>
+
+        {/* Search */}
+        <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border-light)' }}>
+          <div style={{ position: 'relative', maxWidth: '320px' }}>
+            <Search size={14} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-muted)' }} />
+            <input
+              type="text"
+              placeholder="Search by name, ID, or department..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="clean-input"
+              style={{ paddingLeft: '32px' }}
+            />
           </div>
         </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="btn-ft btn-ft-primary"
-          style={{ fontSize: '12.5px' }}
-        >
-          <UserPlus size={14} />
-          Register New Employee
-        </button>
-      </div>
-
-      <div className="ft-table-wrapper" style={{ border: 'none' }}>
-        <table className="ft-table">
-          <thead>
-            <tr>
-              <th>EMPLOYEE</th>
-              <th>DEPARTMENT & ROLE</th>
-              <th>ASSIGNED SHIFT</th>
-              <th>STATUS</th>
-              <th>BIOMETRIC STATUS</th>
-              <th>ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map(emp => (
-              <tr key={emp.emp_id}>
-                <td>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {emp.avatar_url && (
-                      <img
-                        src={emp.avatar_url}
-                        alt={emp.full_name}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '50%',
-                          objectFit: 'cover',
-                          border: '1px solid var(--ft-border-dark)',
-                        }}
-                      />
-                    )}
-                    <div>
-                      <div style={{ fontWeight: 700, fontFamily: 'var(--font-serif-headline)', fontSize: '14.5px' }}>
-                        {emp.full_name}
-                      </div>
-                      <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono-ledger)', color: 'var(--ft-ink-muted)' }}>
-                        {emp.emp_id}
+        {/* Table */}
+        <div className="table-container" style={{ border: 'none', borderRadius: 0 }}>
+          <table className="modern-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Department & Role</th>
+                <th>Shift</th>
+                <th>Face ID</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEmployees.map(emp => (
+                <tr key={emp.emp_id}>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      {emp.avatar_url && (
+                        <img
+                          src={emp.avatar_url}
+                          alt={emp.full_name}
+                          style={{
+                            width: '34px',
+                            height: '34px',
+                            borderRadius: 'var(--radius-full)',
+                            objectFit: 'cover',
+                            border: '1px solid var(--border-light)',
+                          }}
+                        />
+                      )}
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                          {emp.full_name}
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                          {emp.emp_id}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </td>
+                  </td>
 
-                <td>
-                  <div style={{ fontWeight: 600, fontSize: '13px' }}>{emp.department}</div>
-                  <div style={{ fontSize: '11.5px', color: 'var(--ft-ink-muted)' }}>{emp.role}</div>
-                </td>
+                  <td>
+                    <div style={{ fontWeight: 500 }}>{emp.department}</div>
+                    <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>{emp.role}</div>
+                  </td>
 
-                <td>
-                  <span className="badge-ft badge-ft-dark">
-                    {emp.shift_id}
-                  </span>
-                </td>
-
-                <td>
-                  <span className="badge-ft badge-ft-green">
-                    {emp.status}
-                  </span>
-                </td>
-
-                <td>
-                  {emp.face_enrolled ? (
-                    <span className="badge-ft badge-ft-green">
-                      <ShieldCheck size={12} /> 128-D VECTOR ENROLLED
+                  <td>
+                    <span className="status-pill pill-gray">
+                      {emp.shift_id}
                     </span>
-                  ) : (
-                    <span className="badge-ft badge-ft-amber">
-                      NOT ENROLLED
-                    </span>
-                  )}
-                </td>
+                  </td>
 
-                <td>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button
-                      onClick={() => startEnrollment(emp)}
-                      className="btn-ft btn-ft-outline"
-                      style={{ padding: '4px 10px', fontSize: '11.5px' }}
-                    >
-                      <Camera size={13} color="var(--ft-claret)" />
-                      {emp.face_enrolled ? 'Re-Enroll Face' : 'Enroll Face'}
-                    </button>
-                    <button
-                      onClick={() => quickEnrollSynthetic(emp)}
-                      className="btn-ft btn-ft-subtle"
-                      style={{ padding: '4px 8px', fontSize: '11px' }}
-                      title="Generate calibrated vector embedding"
-                    >
-                      <Sparkles size={12} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  <td>
+                    {emp.face_enrolled ? (
+                      <span className="status-pill pill-green">
+                        <ShieldCheck size={11} /> Enrolled
+                      </span>
+                    ) : (
+                      <span className="status-pill pill-amber">
+                        Not Enrolled
+                      </span>
+                    )}
+                  </td>
+
+                  <td>
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                      <button
+                        onClick={() => startEnrollment(emp)}
+                        className="btn-modern btn-secondary"
+                        style={{ padding: '4px 8px', fontSize: '11.5px' }}
+                        title="Enroll or re-enroll face"
+                      >
+                        <Camera size={13} />
+                        {emp.face_enrolled ? 'Re-Enroll' : 'Enroll'}
+                      </button>
+
+                      <button
+                        onClick={() => openEditModal(emp)}
+                        className="btn-modern btn-secondary"
+                        style={{ padding: '4px 8px', fontSize: '11.5px' }}
+                        title="Edit employee details"
+                      >
+                        <Edit2 size={13} />
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteEmployee(emp.emp_id, emp.full_name)}
+                        className="btn-modern btn-ghost"
+                        style={{ padding: '4px 6px', color: 'var(--accent-red)' }}
+                        title="Remove employee"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Interactive Face ID Enrollment Modal */}
-      {enrollTarget && (
-        <div className="ft-modal-overlay">
-          <div className="ft-modal-content" style={{ maxWidth: '520px' }}>
-            <div className="ft-modal-header">
-              <div>
-                <h3 style={{ fontSize: '18px', margin: 0 }}>Face ID Biometric Enrollment</h3>
-                <div style={{ fontSize: '12px', color: 'var(--ft-ink-muted)' }}>
-                  Enrolling: {enrollTarget.full_name} ({enrollTarget.emp_id})
-                </div>
-              </div>
-              <button onClick={closeEnrollment} className="btn-ft btn-ft-subtle" style={{ padding: '4px' }}>
-                <X size={18} />
+      {/* Add / Edit Employee Modal */}
+      {(isAddModalOpen || editingEmployee) && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3 style={{ fontSize: '16px', margin: 0 }}>
+                {editingEmployee ? `Edit Employee (${editingEmployee.emp_id})` : 'Add New Employee'}
+              </h3>
+              <button
+                onClick={() => {
+                  setIsAddModalOpen(false);
+                  setEditingEmployee(null);
+                }}
+                className="btn-modern btn-ghost"
+                style={{ padding: '4px' }}
+              >
+                <X size={16} />
               </button>
             </div>
 
-            <div className="ft-card-body" style={{ padding: '20px', textAlign: 'center' }}>
-              <div
-                style={{
-                  width: '100%',
-                  aspectRatio: '4 / 3',
-                  backgroundColor: '#0A0A0A',
-                  borderRadius: 'var(--radius-sm)',
-                  overflow: 'hidden',
-                  position: 'relative',
-                  marginBottom: '16px',
-                  border: '2px solid var(--ft-border-dark)',
-                }}
-              >
-                <video
-                  ref={enrollVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
-                />
-
-                {/* Reticle */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: '190px',
-                    height: '240px',
-                    border: '2px dashed var(--ft-claret)',
-                    borderRadius: '100px',
-                  }}
-                />
-
-                {/* Overlay status */}
-                {enrollSuccess && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      backgroundColor: 'rgba(255, 241, 229, 0.95)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--ft-green)',
-                    }}
-                  >
-                    <UserCheck size={54} />
-                    <h3 style={{ marginTop: '12px', color: 'var(--ft-ink-primary)' }}>Enrollment Complete!</h3>
-                    <p style={{ fontSize: '12px', color: 'var(--ft-ink-muted)' }}>
-                      128-float biometric embedding saved to master roster.
-                    </p>
+            <form onSubmit={handleSaveEmployee} style={{ padding: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {!editingEmployee && (
+                  <div>
+                    <label className="clean-label">EMPLOYEE ID</label>
+                    <input
+                      type="text"
+                      value={formEmpId}
+                      onChange={e => setFormEmpId(e.target.value)}
+                      placeholder="e.g. EMP-06"
+                      className="clean-input"
+                    />
                   </div>
                 )}
-              </div>
-
-              {/* Progress Steps */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '18px' }}>
-                {[1, 2, 3].map(step => (
-                  <div
-                    key={step}
-                    style={{
-                      padding: '4px 12px',
-                      fontSize: '11px',
-                      fontFamily: 'var(--font-mono-ledger)',
-                      fontWeight: 700,
-                      borderRadius: 'var(--radius-xs)',
-                      backgroundColor:
-                        step < enrollStep
-                          ? 'var(--ft-green-light)'
-                          : step === enrollStep
-                          ? 'var(--ft-claret)'
-                          : 'var(--ft-paper-subtle)',
-                      color:
-                        step < enrollStep
-                          ? 'var(--ft-green)'
-                          : step === enrollStep
-                          ? '#FFF1E5'
-                          : 'var(--ft-ink-muted)',
-                      border: '1px solid var(--ft-border-rule)',
-                    }}
-                  >
-                    CAPTURE {step}/3
-                  </div>
-                ))}
-              </div>
-
-              {enrollError && (
-                <div
-                  style={{
-                    backgroundColor: 'var(--ft-red-light)',
-                    color: 'var(--ft-red)',
-                    padding: '8px 12px',
-                    fontSize: '12px',
-                    borderRadius: 'var(--radius-sm)',
-                    marginBottom: '14px',
-                  }}
-                >
-                  {enrollError}
-                </div>
-              )}
-
-              <p style={{ fontSize: '12.5px', color: 'var(--ft-ink-muted)', marginBottom: '16px' }}>
-                Position face inside the reticle and click Capture. SheetPulse converts facial geometry directly into a 128-float vector without ever persisting camera images.
-              </p>
-
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                <button onClick={closeEnrollment} className="btn-ft btn-ft-outline" style={{ flex: 1 }}>
-                  Cancel
-                </button>
-                <button
-                  onClick={captureEnrollmentFrame}
-                  disabled={isCapturing || enrollSuccess}
-                  className="btn-ft btn-ft-primary"
-                  style={{ flex: 1.5 }}
-                >
-                  <Camera size={14} />
-                  {isCapturing ? 'Processing Vector...' : `Capture Step ${enrollStep} of 3`}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Employee Modal */}
-      {isAddModalOpen && (
-        <div className="ft-modal-overlay">
-          <div className="ft-modal-content" style={{ maxWidth: '480px' }}>
-            <div className="ft-modal-header">
-              <h3 style={{ fontSize: '18px', margin: 0 }}>Register New Personnel</h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="btn-ft btn-ft-subtle" style={{ padding: '4px' }}>
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddEmployee} className="ft-card-body" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '4px' }}>
-                    EMPLOYEE ID (leave blank for auto-generate)
-                  </label>
-                  <input
-                    type="text"
-                    value={newEmpId}
-                    onChange={e => setNewEmpId(e.target.value)}
-                    placeholder="e.g. EMP-06"
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      border: '1px solid var(--ft-border-rule)',
-                      borderRadius: 'var(--radius-sm)',
-                      fontFamily: 'var(--font-mono-ledger)',
-                    }}
-                  />
-                </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '4px' }}>
-                    FULL NAME *
-                  </label>
+                  <label className="clean-label">FULL NAME *</label>
                   <input
                     type="text"
                     required
-                    value={newName}
-                    onChange={e => setNewName(e.target.value)}
+                    value={formName}
+                    onChange={e => setFormName(e.target.value)}
                     placeholder="e.g. David Sterling"
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      border: '1px solid var(--ft-border-rule)',
-                      borderRadius: 'var(--radius-sm)',
-                    }}
+                    className="clean-input"
                   />
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '4px' }}>
-                      DEPARTMENT
-                    </label>
+                    <label className="clean-label">DEPARTMENT</label>
                     <select
-                      value={newDept}
-                      onChange={e => setNewDept(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '8px 10px',
-                        border: '1px solid var(--ft-border-rule)',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--ft-paper-bg)',
-                      }}
+                      value={formDept}
+                      onChange={e => setFormDept(e.target.value)}
+                      className="clean-input"
                     >
-                      <option value="Quantitative Analytics">Quantitative Analytics</option>
-                      <option value="Editorial & Research">Editorial & Research</option>
-                      <option value="Fixed Income & Derivatives">Fixed Income & Derivatives</option>
-                      <option value="Legal & Risk Governance">Legal & Risk Governance</option>
-                      <option value="Treasury & Infrastructure">Treasury & Infrastructure</option>
+                      <option value="Engineering">Engineering</option>
+                      <option value="Product & Design">Product & Design</option>
                       <option value="Operations">Operations</option>
+                      <option value="Finance & Legal">Finance & Legal</option>
+                      <option value="Quantitative Analytics">Quantitative Analytics</option>
+                      <option value="Marketing & Sales">Marketing & Sales</option>
                     </select>
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '4px' }}>
-                      ROLE
-                    </label>
+                    <label className="clean-label">ROLE</label>
                     <input
                       type="text"
-                      value={newRole}
-                      onChange={e => setNewRole(e.target.value)}
-                      placeholder="e.g. Senior Strategist"
-                      style={{
-                        width: '100%',
-                        padding: '8px 10px',
-                        border: '1px solid var(--ft-border-rule)',
-                        borderRadius: 'var(--radius-sm)',
-                      }}
+                      value={formRole}
+                      onChange={e => setFormRole(e.target.value)}
+                      placeholder="e.g. Senior Analyst"
+                      className="clean-input"
                     />
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '4px' }}>
-                      ASSIGNED SHIFT
-                    </label>
+                    <label className="clean-label">ASSIGNED SHIFT</label>
                     <select
-                      value={newShiftId}
-                      onChange={e => setNewShiftId(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '8px 10px',
-                        border: '1px solid var(--ft-border-rule)',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--ft-paper-bg)',
-                      }}
+                      value={formShiftId}
+                      onChange={e => setFormShiftId(e.target.value)}
+                      className="clean-input"
                     >
                       {shifts.map(s => (
                         <option key={s.shift_id} value={s.shift_id}>
@@ -540,21 +422,13 @@ export const PersonnelRoster: React.FC<PersonnelRosterProps> = ({
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '4px' }}>
-                      HOURLY RATE (£)
-                    </label>
+                    <label className="clean-label">HOURLY RATE ($)</label>
                     <input
                       type="number"
                       step="0.5"
-                      value={newRate}
-                      onChange={e => setNewRate(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '8px 10px',
-                        border: '1px solid var(--ft-border-rule)',
-                        borderRadius: 'var(--radius-sm)',
-                        fontFamily: 'var(--font-mono-ledger)',
-                      }}
+                      value={formRate}
+                      onChange={e => setFormRate(e.target.value)}
+                      className="clean-input"
                     />
                   </div>
                 </div>
@@ -562,19 +436,147 @@ export const PersonnelRoster: React.FC<PersonnelRosterProps> = ({
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px', justifyContent: 'flex-end' }}>
                   <button
                     type="button"
-                    onClick={() => setIsAddModalOpen(false)}
-                    className="btn-ft btn-ft-outline"
-                    style={{ flex: 1 }}
+                    onClick={() => {
+                      setIsAddModalOpen(false);
+                      setEditingEmployee(null);
+                    }}
+                    className="btn-modern btn-secondary"
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn-ft btn-ft-primary" style={{ flex: 1.5 }}>
+                  <button type="submit" className="btn-modern btn-primary">
                     <Check size={14} />
-                    Enroll & Save
+                    Save Employee
                   </button>
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Face ID Enrollment Modal */}
+      {enrollTarget && (
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: '480px' }}>
+            <div className="modal-header">
+              <div>
+                <h3 style={{ fontSize: '16px', margin: 0 }}>Face ID Biometric Enrollment</h3>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                  Enrolling: {enrollTarget.full_name} ({enrollTarget.emp_id})
+                </div>
+              </div>
+              <button onClick={closeEnrollment} className="btn-modern btn-ghost" style={{ padding: '4px' }}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={{ padding: '20px', textAlign: 'center' }}>
+              <div
+                style={{
+                  width: '100%',
+                  aspectRatio: '4 / 3',
+                  backgroundColor: '#0F172A',
+                  borderRadius: 'var(--radius-md)',
+                  overflow: 'hidden',
+                  position: 'relative',
+                  marginBottom: '16px',
+                }}
+              >
+                <video
+                  ref={enrollVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
+                />
+
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '170px',
+                    height: '210px',
+                    border: '2px dashed rgba(255, 255, 255, 0.5)',
+                    borderRadius: '80px',
+                  }}
+                />
+
+                {enrollSuccess && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--accent-green)',
+                    }}
+                  >
+                    <UserCheck size={48} />
+                    <h3 style={{ marginTop: '10px', color: 'var(--text-primary)' }}>Enrollment Complete</h3>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      128-float mathematical vector saved.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Steps */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '14px' }}>
+                {[1, 2, 3].map(step => (
+                  <span
+                    key={step}
+                    className={`status-pill ${
+                      step < enrollStep
+                        ? 'pill-green'
+                        : step === enrollStep
+                        ? 'pill-blue'
+                        : 'pill-gray'
+                    }`}
+                  >
+                    Step {step} of 3
+                  </span>
+                ))}
+              </div>
+
+              {enrollError && (
+                <div
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: 'var(--accent-red-light)',
+                    color: 'var(--accent-red)',
+                    fontSize: '12px',
+                    borderRadius: 'var(--radius-sm)',
+                    marginBottom: '12px',
+                  }}
+                >
+                  {enrollError}
+                </div>
+              )}
+
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                Center face inside the frame. Camera frames are transformed on-device into a 128-float vector and never saved as images.
+              </p>
+
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                <button onClick={closeEnrollment} className="btn-modern btn-secondary">
+                  Cancel
+                </button>
+                <button
+                  onClick={captureEnrollmentFrame}
+                  disabled={isCapturing || enrollSuccess}
+                  className="btn-modern btn-primary"
+                >
+                  <Camera size={14} />
+                  {isCapturing ? 'Processing...' : `Capture Step ${enrollStep}`}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

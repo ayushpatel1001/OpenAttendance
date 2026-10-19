@@ -1,5 +1,5 @@
 // SheetPulse • Main Application Entry
-// Financial Times Executive Biometric Attendance Ledger & PWA
+// Modern Minimalist Biometric Attendance PWA
 
 import { useState, useEffect, useCallback } from 'react';
 import {
@@ -40,7 +40,7 @@ export function App() {
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   // Reload data from IndexedDB
@@ -57,7 +57,6 @@ export function App() {
     setMeta(m);
     setPendingSyncCount(outboxCount);
 
-    // Verify cryptographic chain
     const chainRes = await verifyAuditChain(lgs);
     setIsChainValid(chainRes.isValid);
   }, []);
@@ -68,7 +67,6 @@ export function App() {
       await initializeDatabase();
       await refreshData();
 
-      // Start 20-second background write-batching loop
       googleSheetsService.startBackgroundSync(result => {
         if (result.syncedCount > 0) {
           showToast(result.message);
@@ -83,13 +81,11 @@ export function App() {
     };
   }, [refreshData]);
 
-  // Handle Meta updates
   const handleUpdateMeta = async (partial: Partial<MetaState>) => {
     await updateSystemMeta(partial);
     await refreshData();
   };
 
-  // Manual Flush Outbox Queue
   const handleFlushOutbox = async () => {
     setIsSyncing(true);
     const res = await googleSheetsService.flushOutboxQueue();
@@ -104,10 +100,9 @@ export function App() {
 
   if (!meta) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF1E5' }}>
-        <div style={{ textAlign: 'center', fontFamily: 'var(--font-serif-headline)' }}>
-          <h2 style={{ fontSize: '24px', color: 'var(--ft-claret)' }}>SheetPulse Ledger</h2>
-          <p style={{ fontSize: '13px', color: 'var(--ft-ink-muted)' }}>Initialising cryptographic biometric database...</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+          Loading SheetPulse...
         </div>
       </div>
     );
@@ -117,7 +112,7 @@ export function App() {
 
   return (
     <div className="app-container">
-      {/* Editorial Header & Live Market Ticker */}
+      {/* Minimal Header */}
       <Header
         meta={meta}
         pendingSyncCount={pendingSyncCount}
@@ -128,94 +123,90 @@ export function App() {
         isSyncing={isSyncing}
       />
 
-      {/* Financial Times Navigation Tabs */}
-      <nav className="ft-nav">
-        <div className="ft-nav-tabs">
-          <button
-            onClick={() => setActiveTab('kiosk')}
-            className={`ft-nav-tab ${activeTab === 'kiosk' ? 'active' : ''}`}
-          >
-            <Camera size={15} />
-            Face ID Kiosk Terminal
-          </button>
+      {/* Modern Minimal Navigation Bar */}
+      <nav className="minimal-nav">
+        <button
+          onClick={() => setActiveTab('kiosk')}
+          className={`nav-pill ${activeTab === 'kiosk' ? 'active' : ''}`}
+        >
+          <Camera size={15} />
+          Face ID Kiosk
+        </button>
 
-          <button
-            onClick={() => setActiveTab('ledger')}
-            className={`ft-nav-tab ${activeTab === 'ledger' ? 'active' : ''}`}
-          >
-            <BookOpen size={15} />
-            Attendance Ledger ({logs.length})
-          </button>
+        <button
+          onClick={() => setActiveTab('ledger')}
+          className={`nav-pill ${activeTab === 'ledger' ? 'active' : ''}`}
+        >
+          <BookOpen size={15} />
+          Event Ledger ({logs.length})
+        </button>
 
-          <button
-            onClick={() => setActiveTab('roster')}
-            className={`ft-nav-tab ${activeTab === 'roster' ? 'active' : ''}`}
-          >
-            <Users size={15} />
-            Personnel Roster ({employees.length})
-          </button>
+        <button
+          onClick={() => setActiveTab('roster')}
+          className={`nav-pill ${activeTab === 'roster' ? 'active' : ''}`}
+        >
+          <Users size={15} />
+          Personnel ({employees.length})
+        </button>
 
-          <button
-            onClick={() => setActiveTab('shifts')}
-            className={`ft-nav-tab ${activeTab === 'shifts' ? 'active' : ''}`}
-          >
-            <Clock size={15} />
-            Shift & Grace Rules
-          </button>
+        <button
+          onClick={() => setActiveTab('shifts')}
+          className={`nav-pill ${activeTab === 'shifts' ? 'active' : ''}`}
+        >
+          <Clock size={15} />
+          Shifts & Grace
+        </button>
 
-          <button
-            onClick={() => setActiveTab('reports')}
-            className={`ft-nav-tab ${activeTab === 'reports' ? 'active' : ''}`}
-          >
-            <TrendingUp size={15} />
-            Weekly Gazette & Rollup
-          </button>
+        <button
+          onClick={() => setActiveTab('reports')}
+          className={`nav-pill ${activeTab === 'reports' ? 'active' : ''}`}
+        >
+          <TrendingUp size={15} />
+          Weekly Rollup
+        </button>
 
-          <button
-            onClick={() => setActiveTab('audit')}
-            className={`ft-nav-tab ${activeTab === 'audit' ? 'active' : ''}`}
-          >
-            <ShieldCheck size={15} />
-            Cryptographic Audit
-          </button>
+        <button
+          onClick={() => setActiveTab('audit')}
+          className={`nav-pill ${activeTab === 'audit' ? 'active' : ''}`}
+        >
+          <ShieldCheck size={15} />
+          Audit Chain
+        </button>
 
-          <button
-            onClick={() => setActiveTab('sync')}
-            className={`ft-nav-tab ${activeTab === 'sync' ? 'active' : ''}`}
-          >
-            <Cloud size={15} />
-            Google Drive Sync
-          </button>
-        </div>
+        <button
+          onClick={() => setActiveTab('sync')}
+          className={`nav-pill ${activeTab === 'sync' ? 'active' : ''}`}
+        >
+          <Cloud size={15} />
+          Google Sync
+        </button>
       </nav>
 
-      {/* Toast Notification Banner */}
+      {/* Toast Notification */}
       {toastMessage && (
         <div
           style={{
             position: 'fixed',
             bottom: '24px',
             right: '24px',
-            backgroundColor: 'var(--ft-border-dark)',
-            color: '#FFF1E5',
-            padding: '12px 18px',
+            backgroundColor: '#111827',
+            color: '#FFFFFF',
+            padding: '10px 16px',
             borderRadius: 'var(--radius-sm)',
-            boxShadow: 'var(--shadow-paper-lg)',
+            boxShadow: 'var(--shadow-lg)',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
+            gap: '8px',
             zIndex: 9999,
-            fontSize: '13px',
-            fontFamily: 'var(--font-sans-body)',
-            borderLeft: '4px solid var(--ft-claret)',
+            fontSize: '12.5px',
           }}
         >
-          <CheckCircle2 size={16} color="var(--ft-green)" />
+          <CheckCircle2 size={15} color="var(--accent-green)" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Main Content Body */}
+      {/* Main Content Area */}
       <main style={{ flex: 1 }}>
         {activeTab === 'kiosk' && (
           <KioskScanner
@@ -226,7 +217,9 @@ export function App() {
           />
         )}
 
-        {activeTab === 'ledger' && <AttendanceLedger logs={logs} />}
+        {activeTab === 'ledger' && (
+          <AttendanceLedger logs={logs} onRefresh={refreshData} />
+        )}
 
         {activeTab === 'roster' && (
           <PersonnelRoster
@@ -254,30 +247,28 @@ export function App() {
         )}
       </main>
 
-      {/* Editorial Footer */}
+      {/* Minimal Footer */}
       <footer
         style={{
-          marginTop: '40px',
-          borderTop: '3px double var(--ft-border-dark)',
-          paddingTop: '16px',
+          marginTop: '36px',
+          borderTop: '1px solid var(--border-light)',
+          paddingTop: '14px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '12px',
+          gap: '10px',
           fontSize: '12px',
-          color: 'var(--ft-ink-muted)',
+          color: 'var(--text-muted)',
         }}
       >
         <div>
-          <strong>SHEETPULSE EXECUTIVE BIOMETRIC LEDGER</strong> • Published under Financial Times Design Standards
+          SheetPulse • Zero-Server Biometric Attendance PWA
         </div>
-        <div style={{ display: 'flex', gap: '16px', fontFamily: 'var(--font-mono-ledger)' }}>
-          <span>ZERO SERVERS</span>
+        <div style={{ display: 'flex', gap: '14px' }}>
+          <span>100% User Data Sovereignty</span>
           <span>•</span>
-          <span>100% USER GOOGLE DRIVE</span>
-          <span>•</span>
-          <span>SHA-256 AUDIT TRAIL</span>
+          <span>Google Drive & Sheets API v4</span>
         </div>
       </footer>
     </div>

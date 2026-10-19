@@ -1,8 +1,7 @@
-// SheetPulse • Tamper-Evident Cryptographic Audit Inspector
-// SHA-256 Chain Verification • In-Memory Tamper Simulation • Audit Trail
+// SheetPulse • Cryptographic Audit Inspector (Clean & Minimal)
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, ShieldAlert, CheckCircle2, AlertTriangle, RefreshCw, ArrowDown } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
 import type { AttendanceLog } from '../types';
 import { GENESIS_HASH, verifyAuditChain } from '../services/crypto';
 
@@ -42,13 +41,10 @@ export const AuditChainView: React.FC<AuditChainViewProps> = ({ logs }) => {
     setIsVerifying(false);
   };
 
-  // Simulate Google Sheet Tampering (manually edit row data without updating hash)
   const simulateTampering = async () => {
     if (workingLogs.length < 3) return;
-    const targetIdx = 2; // Row 3
+    const targetIdx = 2;
     const copy = JSON.parse(JSON.stringify(workingLogs));
-
-    // Alter timestamp or late_mins (like an employee opening Google Sheets to fake punctuality)
     copy[targetIdx].late_mins = 0;
     copy[targetIdx].action = 'IN';
 
@@ -57,7 +53,6 @@ export const AuditChainView: React.FC<AuditChainViewProps> = ({ logs }) => {
     await runVerification(copy);
   };
 
-  // Restore Ledger
   const restoreLedger = async () => {
     setWorkingLogs(logs);
     setTamperedIndex(null);
@@ -66,140 +61,137 @@ export const AuditChainView: React.FC<AuditChainViewProps> = ({ logs }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Top Banner */}
-      <div className="ft-card ft-card-editorial">
-        <div className="ft-card-header">
+      <div className="modern-card">
+        <div className="card-header-clean">
           <div>
-            <div className="ft-card-title">
-              <span>CRYPTOGRAPHIC TAMPER-DETECTION ENGINE</span>
+            <div className="card-title-clean">
+              Cryptographic Audit Chain
               {auditResult.isValid ? (
-                <span className="badge-ft badge-ft-green">
-                  <ShieldCheck size={12} /> ALL {auditResult.verifiedCount} BLOCKS INTACT
+                <span className="status-pill pill-green">
+                  <ShieldCheck size={12} /> {auditResult.verifiedCount} Blocks Intact
                 </span>
               ) : (
-                <span className="badge-ft badge-ft-claret">
-                  <ShieldAlert size={12} /> HASH CHAIN COMPROMISED
+                <span className="status-pill pill-red">
+                  <ShieldAlert size={12} /> Integrity Tampered
                 </span>
               )}
             </div>
-            <div className="ft-card-subtitle">
-              Every punch mathematically binds to the preceding row's SHA-256 hash. Unauthorized Google Sheet edits break the chain.
+            <div className="card-subtitle-clean">
+              Mathematical SHA-256 chain links prevent unauthorized overtime forgery in Google Sheets
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
             {tamperedIndex !== null ? (
-              <button onClick={restoreLedger} className="btn-ft btn-ft-primary" style={{ fontSize: '12px' }}>
+              <button onClick={restoreLedger} className="btn-modern btn-primary" style={{ fontSize: '12px' }}>
                 <CheckCircle2 size={13} />
-                Restore Ledger Integrity
+                Restore Authentic Chain
               </button>
             ) : (
-              <button onClick={simulateTampering} className="btn-ft btn-ft-outline" style={{ fontSize: '12px', color: 'var(--ft-claret)' }}>
+              <button
+                onClick={simulateTampering}
+                className="btn-modern btn-secondary"
+                style={{ fontSize: '12px', color: 'var(--accent-red)' }}
+              >
                 <AlertTriangle size={13} />
-                Simulate Google Sheet Tamper
+                Simulate Sheet Tampering
               </button>
             )}
 
             <button
               onClick={() => runVerification(workingLogs)}
               disabled={isVerifying}
-              className="btn-ft btn-ft-outline"
+              className="btn-modern btn-secondary"
               style={{ fontSize: '12px' }}
             >
               <RefreshCw size={13} className={isVerifying ? 'animate-spin' : ''} />
-              Re-Verify Chain
+              Re-Verify
             </button>
           </div>
         </div>
 
-        {/* Verification Status Banner */}
-        <div style={{ padding: '20px' }}>
+        <div className="card-body-clean">
           {auditResult.isValid ? (
             <div
               style={{
-                backgroundColor: 'var(--ft-green-light)',
-                border: '1px solid rgba(0, 127, 59, 0.3)',
+                backgroundColor: 'var(--accent-green-light)',
+                border: '1px solid rgba(5, 150, 105, 0.2)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '16px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '16px',
+                gap: '14px',
               }}
             >
               <div
                 style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '50%',
-                  backgroundColor: '#FFF',
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'var(--ft-green)',
-                  border: '1px solid var(--ft-green)',
+                  color: 'var(--accent-green)',
                 }}
               >
-                <ShieldCheck size={24} />
+                <ShieldCheck size={22} />
               </div>
               <div>
-                <h4 style={{ color: 'var(--ft-green)', fontSize: '16px', margin: 0 }}>
-                  Cryptographic Chain 100% Verified
-                </h4>
-                <p style={{ fontSize: '13px', color: 'var(--ft-ink-body)', margin: '2px 0 0 0' }}>
-                  All {auditResult.verifiedCount} attendance events from Genesis to the current Tip are mathematically continuous. No timestamps or punch actions have been manipulated in Google Drive.
+                <strong style={{ color: 'var(--accent-green)', fontSize: '14px' }}>
+                  Cryptographic Chain 100% Valid
+                </strong>
+                <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
+                  All {auditResult.verifiedCount} attendance records from Genesis to current tip are continuous. No timestamps have been altered.
                 </p>
               </div>
             </div>
           ) : (
             <div
               style={{
-                backgroundColor: 'var(--ft-red-light)',
-                border: '2px solid var(--ft-claret)',
+                backgroundColor: 'var(--accent-red-light)',
+                border: '1px solid rgba(220, 38, 38, 0.3)',
                 borderRadius: 'var(--radius-sm)',
-                padding: '18px',
+                padding: '16px',
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: '16px',
+                gap: '14px',
               }}
             >
               <div
                 style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '50%',
-                  backgroundColor: '#FFF',
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'var(--ft-claret)',
-                  border: '2px solid var(--ft-claret)',
+                  color: 'var(--accent-red)',
                   flexShrink: 0,
                 }}
               >
-                <ShieldAlert size={26} />
+                <ShieldAlert size={22} />
               </div>
               <div style={{ flex: 1 }}>
-                <div className="ft-stamp" style={{ marginBottom: '6px' }}>
-                  SECURITY AUDIT FAILURE DETECTED
-                </div>
-                <h4 style={{ color: 'var(--ft-claret)', fontSize: '17px', margin: '4px 0' }}>
-                  Cryptographic Chain Broken at Row #{auditResult.brokenIndex! + 1} ({auditResult.brokenLogId})
-                </h4>
-                <p style={{ fontSize: '13px', color: 'var(--ft-ink-body)', lineHeight: 1.5, marginBottom: '8px' }}>
-                  An unauthorized alteration occurred in Google Sheets! The payload in Row #{auditResult.brokenIndex! + 1} no longer hashes to its recorded cryptographic signature.
+                <strong style={{ color: 'var(--accent-red)', fontSize: '14px' }}>
+                  Chain Corrupted at Block #{auditResult.brokenIndex! + 1} ({auditResult.brokenLogId})
+                </strong>
+                <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: '4px 0 10px 0' }}>
+                  Unauthorized manual alteration detected in Google Sheets! The payload in Row #{auditResult.brokenIndex! + 1} no longer matches its cryptographic signature.
                 </p>
                 <div
                   style={{
-                    backgroundColor: '#FFF',
+                    backgroundColor: '#FFFFFF',
                     padding: '8px 12px',
-                    borderRadius: 'var(--radius-xs)',
-                    fontFamily: 'var(--font-mono-ledger)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontFamily: 'var(--font-mono)',
                     fontSize: '11px',
-                    border: '1px solid var(--ft-border-rule)',
+                    border: '1px solid var(--border-light)',
                   }}
                 >
-                  <div>EXPECTED SIGNATURE: <span style={{ color: 'var(--ft-green)', fontWeight: 700 }}>{auditResult.expectedHash}</span></div>
-                  <div>ACTUAL SHEET VALUE: <span style={{ color: 'var(--ft-red)', fontWeight: 700 }}>{auditResult.actualHash}</span></div>
+                  <div>EXPECTED: <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>{auditResult.expectedHash}</span></div>
+                  <div>RECORDED: <span style={{ color: 'var(--accent-red)', fontWeight: 600 }}>{auditResult.actualHash}</span></div>
                 </div>
               </div>
             </div>
@@ -208,119 +200,94 @@ export const AuditChainView: React.FC<AuditChainViewProps> = ({ logs }) => {
           {/* Hashes Summary */}
           <div
             style={{
-              marginTop: '18px',
+              marginTop: '16px',
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
               gap: '12px',
             }}
           >
             <div
               style={{
-                padding: '12px',
-                border: '1px solid var(--ft-border-rule)',
+                padding: '12px 14px',
+                border: '1px solid var(--border-light)',
                 borderRadius: 'var(--radius-sm)',
-                backgroundColor: 'var(--ft-paper-subtle)',
+                backgroundColor: 'var(--bg-subtle)',
               }}
             >
-              <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--ft-ink-muted)', fontWeight: 700 }}>
-                GENESIS TIP HASH (ANCHOR)
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                GENESIS HASH ANCHOR
               </div>
-              <div style={{ fontFamily: 'var(--font-mono-ledger)', fontSize: '11.5px', wordBreak: 'break-all', marginTop: '4px' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', wordBreak: 'break-all', marginTop: '3px' }}>
                 {GENESIS_HASH}
               </div>
             </div>
 
             <div
               style={{
-                padding: '12px',
-                border: '1px solid var(--ft-border-rule)',
+                padding: '12px 14px',
+                border: '1px solid var(--border-light)',
                 borderRadius: 'var(--radius-sm)',
-                backgroundColor: 'var(--ft-paper-subtle)',
+                backgroundColor: 'var(--bg-subtle)',
               }}
             >
-              <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--ft-ink-muted)', fontWeight: 700 }}>
-                CURRENT CHAIN TIP (LATEST PUNCH)
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                CURRENT CHAIN TIP
               </div>
-              <div style={{ fontFamily: 'var(--font-mono-ledger)', fontSize: '11.5px', wordBreak: 'break-all', marginTop: '4px', color: 'var(--ft-claret)', fontWeight: 700 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', wordBreak: 'break-all', marginTop: '3px', fontWeight: 600 }}>
                 {workingLogs[workingLogs.length - 1]?.prev_hash_sig || GENESIS_HASH}
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Cryptographic Block Chain Walkthrough */}
-        <div style={{ borderTop: '1px solid var(--ft-border-rule)', padding: '18px' }}>
-          <h4 style={{ fontSize: '15px', marginBottom: '14px', fontFamily: 'var(--font-serif-headline)' }}>
-            Sequential Block Hash Verification Walkthrough:
-          </h4>
+          {/* Sequential Block Walk */}
+          <div style={{ marginTop: '20px' }}>
+            <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '10px' }}>
+              Sequential Block Signatures:
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {workingLogs.slice(0, 8).map((log, index) => {
-              const isBroken = auditResult.brokenIndex === index;
-              return (
-                <div key={log.log_id}>
-                  <div
-                    style={{
-                      padding: '10px 14px',
-                      backgroundColor: isBroken ? 'var(--ft-red-light)' : '#FFFDFB',
-                      border: `1px solid ${isBroken ? 'var(--ft-claret)' : 'var(--ft-border-rule)'}`,
-                      borderRadius: 'var(--radius-xs)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      flexWrap: 'wrap',
-                      gap: '10px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span className="badge-ft badge-ft-dark" style={{ width: '28px', justifyContent: 'center' }}>
-                        #{index + 1}
-                      </span>
-                      <div>
-                        <span style={{ fontWeight: 700 }}>{log.full_name || log.emp_id}</span>
-                        <span style={{ margin: '0 6px', color: 'var(--ft-ink-muted)' }}>•</span>
-                        <span className={`badge-ft ${log.action === 'IN' ? 'badge-ft-green' : 'badge-ft-blue'}`}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {workingLogs.slice(0, 6).map((log, index) => {
+                const isBroken = auditResult.brokenIndex === index;
+                return (
+                  <div key={log.log_id}>
+                    <div
+                      style={{
+                        padding: '10px 14px',
+                        backgroundColor: isBroken ? 'var(--accent-red-light)' : '#FFFFFF',
+                        border: `1px solid ${isBroken ? 'var(--accent-red)' : 'var(--border-light)'}`,
+                        borderRadius: 'var(--radius-sm)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        fontSize: '12.5px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="status-pill pill-gray" style={{ fontFamily: 'var(--font-mono)' }}>
+                          #{index + 1}
+                        </span>
+                        <strong>{log.full_name || log.emp_id}</strong>
+                        <span className={`status-pill ${log.action === 'IN' ? 'pill-green' : 'pill-blue'}`}>
                           {log.action}
                         </span>
                       </div>
-                    </div>
 
-                    <div style={{ fontFamily: 'var(--font-mono-ledger)', fontSize: '11px', color: 'var(--ft-ink-muted)' }}>
-                      TIMESTAMP: {new Date(log.iso_timestamp).toLocaleTimeString()}
-                    </div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)' }}>
+                        {log.prev_hash_sig.substring(0, 16)}...
+                      </div>
 
-                    <div
-                      style={{
-                        fontFamily: 'var(--font-mono-ledger)',
-                        fontSize: '11px',
-                        backgroundColor: 'var(--ft-paper-subtle)',
-                        padding: '3px 8px',
-                        borderRadius: 'var(--radius-xs)',
-                        border: '1px solid var(--ft-border-rule)',
-                        color: isBroken ? 'var(--ft-red)' : 'var(--ft-ink-primary)',
-                        fontWeight: isBroken ? 700 : 500,
-                      }}
-                    >
-                      SIG: {log.prev_hash_sig.substring(0, 16)}...
-                    </div>
-
-                    <div>
-                      {isBroken ? (
-                        <span className="badge-ft badge-ft-claret">BROKEN LINK</span>
-                      ) : (
-                        <span className="badge-ft badge-ft-green">VALID ✓</span>
-                      )}
+                      <div>
+                        {isBroken ? (
+                          <span className="status-pill pill-red">Broken</span>
+                        ) : (
+                          <span className="status-pill pill-green">Verified</span>
+                        )}
+                      </div>
                     </div>
                   </div>
-
-                  {index < Math.min(workingLogs.length - 1, 7) && (
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '3px 0' }}>
-                      <ArrowDown size={14} color="var(--ft-border-rule)" />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

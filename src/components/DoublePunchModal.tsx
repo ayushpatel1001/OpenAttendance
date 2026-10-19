@@ -30,58 +30,55 @@ export const DoublePunchModal: React.FC<DoublePunchModalProps> = ({
   const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
 
   return (
-    <div className="ft-modal-overlay">
-      <div className="ft-modal-content" style={{ maxWidth: '480px' }}>
-        <div className="ft-modal-header" style={{ borderBottomColor: 'var(--ft-amber)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div className="modal-overlay">
+      <div className="modal-card" style={{ maxWidth: '440px' }}>
+        <div className="modal-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div
               style={{
-                width: '32px',
-                height: '32px',
-                backgroundColor: 'var(--ft-amber-light)',
-                borderRadius: '50%',
+                width: '28px',
+                height: '28px',
+                backgroundColor: 'var(--accent-amber-light)',
+                borderRadius: 'var(--radius-full)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--ft-amber)',
+                color: 'var(--accent-amber)',
               }}
             >
-              <AlertTriangle size={18} />
+              <AlertTriangle size={15} />
             </div>
             <div>
-              <h3 style={{ fontSize: '18px', margin: 0, color: 'var(--ft-ink-primary)' }}>
-                Double-Punch Warning
+              <h3 style={{ fontSize: '15px', margin: 0, fontWeight: 600 }}>
+                Recent Punch Detected
               </h3>
-              <div style={{ fontSize: '12px', color: 'var(--ft-ink-muted)' }}>
-                Kiosk Guard Active (&lt; 3 minutes)
-              </div>
             </div>
           </div>
-          <button onClick={onCancel} className="btn-ft btn-ft-subtle" style={{ padding: '4px' }}>
-            <X size={18} />
+          <button onClick={onCancel} className="btn-modern btn-ghost" style={{ padding: '4px' }}>
+            <X size={16} />
           </button>
         </div>
 
-        <div className="ft-card-body" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+        <div style={{ padding: '18px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
             {employee.avatar_url && (
               <img
                 src={employee.avatar_url}
                 alt={employee.full_name}
                 style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '50%',
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: 'var(--radius-full)',
                   objectFit: 'cover',
-                  border: '2px solid var(--ft-border-dark)',
+                  border: '1px solid var(--border-light)',
                 }}
               />
             )}
             <div>
-              <div style={{ fontFamily: 'var(--font-serif-headline)', fontSize: '17px', fontWeight: 700 }}>
+              <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 {employee.full_name}
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--ft-ink-muted)' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                 {employee.role} • {employee.department}
               </div>
             </div>
@@ -89,39 +86,33 @@ export const DoublePunchModal: React.FC<DoublePunchModalProps> = ({
 
           <div
             style={{
-              backgroundColor: 'var(--ft-amber-light)',
-              border: '1px solid rgba(199, 107, 0, 0.3)',
+              backgroundColor: 'var(--accent-amber-light)',
               borderRadius: 'var(--radius-sm)',
               padding: '12px 14px',
-              fontSize: '13.5px',
-              color: '#6F3C00',
-              marginBottom: '20px',
-              lineHeight: 1.5,
+              fontSize: '13px',
+              color: '#92400E',
+              marginBottom: '18px',
+              lineHeight: 1.4,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, marginBottom: '4px' }}>
-              <Clock size={15} />
-              Recent Punch Detected
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 600, marginBottom: '2px' }}>
+              <Clock size={14} />
+              Double-Punch Guard
             </div>
-            You recorded an <strong>{lastLog.action}</strong> punch only <strong>{timeStr}</strong> ago. Did you intend to record an immediate <strong>{inferredAction}</strong> punch, or was this an accidental re-scan?
+            You recorded an <strong>{lastLog.action}</strong> punch only <strong>{timeStr}</strong> ago. Do you wish to record another punch?
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-            <button
-              onClick={onCancel}
-              className="btn-ft btn-ft-outline"
-              style={{ flex: 1 }}
-            >
-              <X size={15} />
-              Cancel & Discard
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <button onClick={onCancel} className="btn-modern btn-secondary" style={{ flex: 1 }}>
+              Cancel
             </button>
             <button
               onClick={() => onConfirm(inferredAction)}
-              className="btn-ft btn-ft-primary"
+              className="btn-modern btn-primary"
               style={{ flex: 1.2 }}
             >
-              <Check size={15} />
-              Confirm {inferredAction} Punch
+              <Check size={14} />
+              Confirm {inferredAction}
             </button>
           </div>
         </div>

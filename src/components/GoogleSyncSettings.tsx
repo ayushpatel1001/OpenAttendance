@@ -1,16 +1,7 @@
-// SheetPulse • Google Drive & Sheets API Configuration & Outbox Batch Manager
-// Least-Privilege OAuth 2.0 ('drive.file') • Master DB Auto-Provisioning • 60 Writes/Min Defeat
+// SheetPulse • Google Drive & Sheets Configuration (Clean & Minimal)
 
 import React, { useState, useEffect } from 'react';
-import {
-  Cloud,
-  CheckCircle2,
-  ExternalLink,
-  RefreshCw,
-  Sliders,
-  Database,
-  Zap,
-} from 'lucide-react';
+import { Cloud, CheckCircle2, ExternalLink, RefreshCw, Database, Zap } from 'lucide-react';
 import type { MetaState, OutboxItem } from '../types';
 import { db } from '../services/db';
 import { googleSheetsService } from '../services/googleSheets';
@@ -46,7 +37,7 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
 
   const handleSaveClientId = () => {
     onUpdateMeta({ google_client_id: clientId.trim() });
-    setStatusMessage('Google Client ID saved. Initializing Google Identity Services...');
+    setStatusMessage('Google Client ID saved.');
 
     if (clientId.trim()) {
       googleSheetsService.initializeGis(clientId.trim(), (token, expiresIn) => {
@@ -55,7 +46,7 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
           google_access_token: token,
           google_token_expiry: expiry,
         });
-        setStatusMessage('Google Account authenticated with least-privilege drive.file scope!');
+        setStatusMessage('Google Account authorized with least-privilege drive.file scope!');
       });
     }
   };
@@ -70,14 +61,13 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
 
   const handleAutoProvision = async () => {
     if (!meta.google_access_token) {
-      // If no live token, simulate provisioning or prompt sign in
       setStatusMessage('Requesting Google authorization...');
       googleSheetsService.requestAccessToken();
       return;
     }
 
     setIsProvisioning(true);
-    setStatusMessage('Provisining _SheetPulse_Master_DB in your Google Drive (all 5 tabs)...');
+    setStatusMessage('Provisioning _SheetPulse_Master_DB in your Google Drive (5 tabs)...');
 
     try {
       const { spreadsheetId, spreadsheetUrl } = await googleSheetsService.provisionMasterSpreadsheet(
@@ -88,7 +78,7 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
         spreadsheet_name: '_SheetPulse_Master_DB',
         spreadsheet_url: spreadsheetUrl,
       });
-      setStatusMessage(`Provisioning complete! Database active at: ${spreadsheetUrl}`);
+      setStatusMessage(`Provisioning complete! Master sheet linked.`);
     } catch (err: any) {
       console.error(err);
       setStatusMessage(`Provisioning failed: ${err.message}`);
@@ -98,7 +88,7 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
   };
 
   const handleResetToDemo = async () => {
-    if (confirm('Reset SheetPulse database to initial factory demo dataset?')) {
+    if (confirm('Reset database to clean initial state?')) {
       await db.attendance_logs.clear();
       await db.outbox.clear();
       await db.employees.clear();
@@ -110,81 +100,74 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Google Sheets Provisioning Card */}
-      <div className="ft-card ft-card-editorial">
-        <div className="ft-card-header">
+      {/* Google Sheets Provisioning */}
+      <div className="modern-card">
+        <div className="card-header-clean">
           <div>
-            <div className="ft-card-title">
-              <Cloud size={18} color="var(--ft-claret)" />
-              <span>GOOGLE DRIVE & SHEETS API v4 INTEGRATION</span>
+            <div className="card-title-clean">
+              <Cloud size={16} />
+              Google Drive & Sheets Integration
             </div>
-            <div className="ft-card-subtitle">
-              Zero Server Backend: Least-privilege 'drive.file' scope grants access only to files created by this app
+            <div className="card-subtitle-clean">
+              Connect your Google account using least-privilege 'drive.file' scope for free cloud persistence
             </div>
           </div>
 
           <div>
             {meta.spreadsheet_id ? (
-              <span className="badge-ft badge-ft-green">
-                <CheckCircle2 size={11} /> DRIVE DB ACTIVE
+              <span className="status-pill pill-green">
+                <CheckCircle2 size={11} /> Drive Connected
               </span>
             ) : (
-              <span className="badge-ft badge-ft-dark">
-                LOCAL OFFLINE MODE
+              <span className="status-pill pill-gray">
+                Local Storage Mode
               </span>
             )}
           </div>
         </div>
 
-        <div className="ft-card-body" style={{ padding: '20px' }}>
-          {/* OAuth Status Banner */}
+        <div className="card-body-clean">
           <div
             style={{
-              padding: '14px 18px',
-              backgroundColor: '#FFFDFB',
-              border: '1px solid var(--ft-border-rule)',
+              padding: '14px',
+              backgroundColor: 'var(--bg-subtle)',
               borderRadius: 'var(--radius-sm)',
-              marginBottom: '20px',
+              marginBottom: '18px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               flexWrap: 'wrap',
-              gap: '12px',
+              gap: '10px',
             }}
           >
             <div>
-              <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '2px' }}>
-                Google OAuth Connection Status
+              <div style={{ fontWeight: 600, fontSize: '13px' }}>
+                Google OAuth Authorization
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--ft-ink-muted)' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                 {meta.google_access_token ? (
-                  <span style={{ color: 'var(--ft-green)', fontWeight: 600 }}>
-                    ● Authenticated (Token expires in ~{Math.max(0, Math.round(((meta.google_token_expiry || 0) - Date.now()) / 60000))} mins)
+                  <span style={{ color: 'var(--accent-green)', fontWeight: 500 }}>
+                    Active session (expires in ~{Math.max(0, Math.round(((meta.google_token_expiry || 0) - Date.now()) / 60000))} mins)
                   </span>
                 ) : (
-                  <span>Unlinked. Running locally with IndexedDB outbox queue.</span>
+                  <span>Not authenticated. Check-ins are stored safely in local IndexedDB.</span>
                 )}
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                onClick={handleSignInGoogle}
-                className="btn-ft btn-ft-outline"
-                style={{ fontSize: '12.5px' }}
-              >
+              <button onClick={handleSignInGoogle} className="btn-modern btn-secondary">
                 <Cloud size={14} />
-                {meta.google_access_token ? 'Re-Authenticate Google' : 'Sign In with Google'}
+                {meta.google_access_token ? 'Re-Connect' : 'Sign In with Google'}
               </button>
 
               <button
                 onClick={handleAutoProvision}
                 disabled={isProvisioning}
-                className="btn-ft btn-ft-primary"
-                style={{ fontSize: '12.5px' }}
+                className="btn-modern btn-primary"
               >
                 <Zap size={14} />
-                {isProvisioning ? 'Provisioning...' : 'Auto-Provision Drive Sheet'}
+                {isProvisioning ? 'Creating...' : 'Provision Drive Sheet'}
               </button>
             </div>
           </div>
@@ -192,26 +175,25 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
           {meta.spreadsheet_url && (
             <div
               style={{
-                padding: '12px 16px',
-                backgroundColor: 'var(--ft-green-light)',
-                border: '1px solid rgba(0, 127, 59, 0.3)',
+                padding: '12px 14px',
+                backgroundColor: 'var(--accent-green-light)',
                 borderRadius: 'var(--radius-sm)',
-                marginBottom: '20px',
+                marginBottom: '18px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
               <div>
-                <strong style={{ color: 'var(--ft-green)', fontSize: '13px' }}>Master Google Sheet Linked:</strong>
-                <div style={{ fontSize: '12px', color: 'var(--ft-ink-body)' }}>{meta.spreadsheet_name} ({meta.spreadsheet_id})</div>
+                <strong style={{ color: 'var(--accent-green)', fontSize: '13px' }}>Linked Spreadsheet:</strong>
+                <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{meta.spreadsheet_name}</div>
               </div>
               <a
                 href={meta.spreadsheet_url}
                 target="_blank"
                 rel="noreferrer"
-                className="btn-ft btn-ft-outline"
-                style={{ fontSize: '12px' }}
+                className="btn-modern btn-secondary"
+                style={{ fontSize: '12px', textDecoration: 'none' }}
               >
                 Open in Drive <ExternalLink size={12} />
               </a>
@@ -221,165 +203,126 @@ export const GoogleSyncSettings: React.FC<GoogleSyncSettingsProps> = ({
           {statusMessage && (
             <div
               style={{
-                padding: '10px 14px',
-                backgroundColor: 'var(--ft-paper-subtle)',
-                borderRadius: 'var(--radius-xs)',
-                fontSize: '12.5px',
-                marginBottom: '18px',
-                color: 'var(--ft-ink-primary)',
+                padding: '8px 12px',
+                backgroundColor: 'var(--accent-blue-light)',
+                color: 'var(--accent-blue)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '12px',
+                marginBottom: '16px',
               }}
             >
               {statusMessage}
             </div>
           )}
 
-          {/* Client ID Configuration Field */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>
-              GOOGLE CLOUD CLIENT ID (Web Application)
-            </label>
+          {/* Client ID */}
+          <div>
+            <label className="clean-label">GOOGLE CLOUD CLIENT ID</label>
             <div style={{ display: 'flex', gap: '8px' }}>
               <input
                 type="text"
                 value={clientId}
                 onChange={e => setClientId(e.target.value)}
                 placeholder="e.g. 1234567890-abcdefgh.apps.googleusercontent.com"
-                style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  border: '1px solid var(--ft-border-rule)',
-                  borderRadius: 'var(--radius-sm)',
-                  fontFamily: 'var(--font-mono-ledger)',
-                  fontSize: '12.5px',
-                }}
+                className="clean-input"
               />
-              <button onClick={handleSaveClientId} className="btn-ft btn-ft-dark">
-                Save Client ID
+              <button onClick={handleSaveClientId} className="btn-modern btn-secondary">
+                Save
               </button>
             </div>
-            <p style={{ fontSize: '11.5px', color: 'var(--ft-ink-muted)', marginTop: '6px' }}>
-              Create in Google Cloud Console with authorized JavaScript origin: <code>http://localhost:5173</code> (or your domain). Scope requested is strictly <code>https://www.googleapis.com/auth/drive.file</code>.
+            <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '5px' }}>
+              Create in Google Cloud Console with authorized JavaScript origin: <code>http://localhost:5174</code>. Scope: <code>https://www.googleapis.com/auth/drive.file</code>.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Write Batching & Outbox Queue Card */}
-      <div className="ft-card ft-card-dark-header">
-        <div className="ft-card-header">
+      {/* Outbox Batch Queue */}
+      <div className="modern-card">
+        <div className="card-header-clean">
           <div>
-            <div className="ft-card-title">
-              <Database size={16} color="var(--ft-claret)" />
-              <span>OUTBOX BATCH SYNC ENGINE</span>
-              <span className="badge-ft badge-ft-dark">
-                {outboxItems.length} PENDING IN QUEUE
-              </span>
+            <div className="card-title-clean">
+              <Database size={16} />
+              Outbox Sync Queue ({outboxItems.length} Pending)
             </div>
-            <div className="ft-card-subtitle">
-              Defeating Google's 60 Writes/Min Quota: Bundles all punches into a single append call every 20 seconds
+            <div className="card-subtitle-clean">
+              Defeats Google's 60 writes/min quota by batching punches every 20 seconds into a single append call
             </div>
           </div>
 
           <button
             onClick={onFlushOutbox}
             disabled={isSyncing || outboxItems.length === 0}
-            className="btn-ft btn-ft-primary"
+            className="btn-modern btn-primary"
             style={{ fontSize: '12px' }}
           >
             <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
-            {isSyncing ? 'Flushing...' : 'Flush Outbox Now'}
+            {isSyncing ? 'Flushing...' : 'Flush Outbox'}
           </button>
         </div>
 
-        <div className="ft-card-body" style={{ padding: '18px 20px' }}>
+        <div className="card-body-clean">
           {outboxItems.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px', color: 'var(--ft-ink-muted)' }}>
-              <CheckCircle2 size={32} color="var(--ft-green)" style={{ margin: '0 auto 8px auto' }} />
-              <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--ft-ink-primary)' }}>
-                Outbox is completely clear
-              </div>
-              <div style={{ fontSize: '12px' }}>
-                All Face ID punches have been bundled and committed to the master ledger.
-              </div>
+            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
+              All punches are synchronized.
             </div>
           ) : (
-            <div>
-              <div style={{ fontSize: '12.5px', color: 'var(--ft-ink-muted)', marginBottom: '12px' }}>
-                The following {outboxItems.length} punch(es) are staged in local IndexedDB and will be dispatched in the next automated 20-second batch cycle:
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {outboxItems.map(item => (
-                  <div
-                    key={item.id}
-                    style={{
-                      padding: '8px 12px',
-                      backgroundColor: '#FFFDFB',
-                      border: '1px solid var(--ft-border-rule)',
-                      borderRadius: 'var(--radius-xs)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      fontSize: '12px',
-                    }}
-                  >
-                    <div>
-                      <strong>{item.payload.full_name}</strong> ({item.payload.emp_id}) —
-                      <span className={`badge-ft ${item.payload.action === 'IN' ? 'badge-ft-green' : 'badge-ft-blue'}`} style={{ marginLeft: '6px' }}>
-                        {item.payload.action}
-                      </span>
-                    </div>
-
-                    <div style={{ fontFamily: 'var(--font-mono-ledger)', color: 'var(--ft-ink-muted)' }}>
-                      QUEUED: {new Date(item.created_at).toLocaleTimeString()}
-                    </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {outboxItems.map(item => (
+                <div
+                  key={item.id}
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: 'var(--bg-subtle)',
+                    borderRadius: 'var(--radius-sm)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontSize: '12.5px',
+                  }}
+                >
+                  <div>
+                    <strong>{item.payload.full_name}</strong> ({item.payload.emp_id}) —
+                    <span className={`status-pill ${item.payload.action === 'IN' ? 'pill-green' : 'pill-blue'}`} style={{ marginLeft: '6px' }}>
+                      {item.payload.action}
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)' }}>
+                    Queued: {new Date(item.created_at).toLocaleTimeString()}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* Kiosk Hardware & System Reset */}
-      <div className="ft-card">
-        <div className="ft-card-header">
-          <div className="ft-card-title">
-            <Sliders size={16} />
-            <span>KIOSK HARDWARE & DEVICE SETTINGS</span>
-          </div>
+      {/* Device & Reset */}
+      <div className="modern-card">
+        <div className="card-header-clean">
+          <div className="card-title-clean">Device Identifier & Diagnostics</div>
         </div>
 
-        <div className="ft-card-body" style={{ padding: '20px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+        <div className="card-body-clean">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>
-                KIOSK DEVICE IDENTIFIER
-              </label>
+              <label className="clean-label">KIOSK DEVICE NAME</label>
               <input
                 type="text"
                 value={meta.kiosk_device_id}
                 onChange={e => onUpdateMeta({ kiosk_device_id: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  border: '1px solid var(--ft-border-rule)',
-                  borderRadius: 'var(--radius-sm)',
-                  fontFamily: 'var(--font-mono-ledger)',
-                }}
+                className="clean-input"
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>
-                DATA RETENTION & SEEDING
-              </label>
+              <label className="clean-label">DATABASE RESET</label>
               <button
                 onClick={handleResetToDemo}
-                className="btn-ft btn-ft-outline"
-                style={{ width: '100%', color: 'var(--ft-claret)', justifyContent: 'center' }}
+                className="btn-modern btn-danger"
+                style={{ width: '100%' }}
               >
-                Reset Database to Factory Demo
+                Reset Database to Defaults
               </button>
             </div>
           </div>

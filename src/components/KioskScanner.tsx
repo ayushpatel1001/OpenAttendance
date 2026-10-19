@@ -1,5 +1,5 @@
-// SheetPulse • Kiosk Face ID Terminal
-// On-Device Biometric Verification • Reticle HUD • Speech Confirmation • Wake Lock
+// SheetPulse • Minimal Face ID Kiosk Terminal
+// Modern On-Device Biometrics • Clean HUD • Audio & Voice Confirmation
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import confetti from 'canvas-confetti';
@@ -10,6 +10,7 @@ import {
   VolumeX,
   Sparkles,
   Maximize2,
+  CheckCircle2,
 } from 'lucide-react';
 import type { Employee, AttendanceLog, PunchAction, MetaState } from '../types';
 import { faceIdEngine } from '../services/faceEngine';
@@ -40,13 +41,11 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
   } | null>(null);
 
   // Optical metrics
-  const [opticalStatus, setOpticalStatus] = useState<string>('POSITION FACE IN RETICLE');
-  const [lightingLevel, setLightingLevel] = useState<number>(0.8);
-  const [livenessPassed, setLivenessPassed] = useState<boolean>(true);
+  const [opticalStatus, setOpticalStatus] = useState<string>('Ready to scan');
   const [confidenceScore, setConfidenceScore] = useState<number>(0);
   const [selectedActionOverride, setSelectedActionOverride] = useState<'AUTO' | 'IN' | 'OUT'>('AUTO');
 
-  // Double punch guard state
+  // Double punch guard
   const [doublePunchGuard, setDoublePunchGuard] = useState<{
     isOpen: boolean;
     employee: Employee | null;
@@ -61,7 +60,6 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
     inferredAction: 'IN',
   });
 
-  // Wake lock
   const wakeLockRef = useRef<any>(null);
 
   const requestWakeLock = useCallback(async () => {
@@ -82,10 +80,10 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
       setCameraError(null);
       await faceIdEngine.startCamera(videoRef.current);
       setCameraActive(true);
-      setOpticalStatus('SCANNING FOR BIOMETRIC ENROLLMENTS...');
+      setOpticalStatus('Align face with camera');
     } catch (err: any) {
       console.error('Camera start failed:', err);
-      setCameraError(err.message || 'Unable to access camera. Please allow camera permissions.');
+      setCameraError(err.message || 'Unable to access camera. Please grant camera permission.');
       setCameraActive(false);
     }
   }, []);
@@ -95,7 +93,7 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
     if (videoRef.current) {
       faceIdEngine.stopCamera(videoRef.current);
       setCameraActive(false);
-      setOpticalStatus('CAMERA OFFLINE');
+      setOpticalStatus('Camera offline');
     }
   }, []);
 
@@ -113,9 +111,8 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
   // Complete Punch Flow
   const processPunch = async (employee: Employee, forcedAction?: PunchAction) => {
     setIsVerifying(true);
-    setOpticalStatus(`MATCH CONFIRMED: ${employee.full_name.toUpperCase()}`);
+    setOpticalStatus(`Verified: ${employee.full_name}`);
 
-    // Determine Action
     let actionToUse: PunchAction;
     if (selectedActionOverride !== 'AUTO') {
       actionToUse = selectedActionOverride as PunchAction;
@@ -125,7 +122,7 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
       actionToUse = await inferNextAction(employee.emp_id);
     }
 
-    // Check Double-Punch Guard (< 3 minutes) if not forced
+    // Check Double Punch Guard
     if (!forcedAction) {
       const guardCheck = await checkDoublePunch(employee.emp_id);
       if (guardCheck.isDoublePunch && guardCheck.lastLog) {
@@ -143,30 +140,25 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
     }
 
     try {
-      // Execute punch with cryptographic hash chain
-      const log = await executeFacePunch(employee, actionToUse, 0.97);
+      const log = await executeFacePunch(employee, actionToUse, 0.96);
 
-      // Play harmonic bell chime
       if (meta.sound_enabled) {
         audioService.playSuccessChime();
       }
 
-      // Celebratory Confetti
       confetti({
-        particleCount: 40,
-        spread: 70,
+        particleCount: 35,
+        spread: 60,
         origin: { y: 0.65 },
-        colors: ['#990F3D', '#0F5499', '#007F3B', '#FFF1E5', '#141414'],
+        colors: ['#2563EB', '#10B981', '#111827'],
       });
 
-      // Voice Feedback
       if (meta.voice_enabled) {
         const timeStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
         const greeting = actionToUse === 'IN' ? 'Welcome' : 'Goodbye';
         audioService.speak(`${greeting} ${employee.full_name}. Recorded ${actionToUse} at ${timeStr}.`);
       }
 
-      // Show verified card overlay
       setVerifiedEmployee({ employee, log });
       onPunchSuccess(log);
 
@@ -174,15 +166,15 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
         setVerifiedEmployee(null);
         setIsVerifying(false);
         setConfidenceScore(0);
-        setOpticalStatus('POSITION FACE IN RETICLE');
-      }, 3000);
+        setOpticalStatus('Ready to scan');
+      }, 2600);
     } catch (e) {
       console.error('Punch execution error:', e);
       setIsVerifying(false);
     }
   };
 
-  // Continuous Camera Detection Loop
+  // Live video frame processing loop
   useEffect(() => {
     let animId: number;
     let lastScanTime = 0;
@@ -190,28 +182,21 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
     const scanFrame = () => {
       const now = Date.now();
       if (cameraActive && videoRef.current && !isVerifying && !verifiedEmployee) {
-        // Run extraction every 400ms to stay super responsive while lightweight
-        if (now - lastScanTime > 400) {
+        if (now - lastScanTime > 350) {
           lastScanTime = now;
-          const { vector, faceDetected, lightingQuality, livenessPassed: livePass } =
-            faceIdEngine.extractEmbeddingFromVideo(videoRef.current);
-
-          setLightingLevel(lightingQuality);
-          setLivenessPassed(livePass);
+          const { vector, faceDetected } = faceIdEngine.extractEmbeddingFromVideo(videoRef.current);
 
           if (faceDetected && vector.length === 128) {
-            setOpticalStatus('ANALYZING 128-D VECTOR EMBEDDING...');
+            setOpticalStatus('Matching biometric profile...');
             const matchResult = faceIdEngine.matchEmployee(vector, employees, 0.84);
             setConfidenceScore(matchResult.confidence);
 
             if (matchResult.matched && matchResult.employee) {
               processPunch(matchResult.employee);
-            } else {
-              setOpticalStatus('FACE DETECTED • MATCHING ROSTER...');
             }
           } else {
             setConfidenceScore(0);
-            setOpticalStatus('POSITION FACE IN RETICLE');
+            setOpticalStatus('Align face with camera');
           }
         }
       }
@@ -227,45 +212,36 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
     };
   }, [cameraActive, isVerifying, verifiedEmployee, employees]);
 
-  // Request wake lock on component mount if enabled
-  useEffect(() => {
-    if (meta.wake_lock_enabled) {
-      requestWakeLock();
-    }
-    return () => {
-      if (wakeLockRef.current) {
-        wakeLockRef.current.release();
-      }
-    };
-  }, [requestWakeLock, meta.wake_lock_enabled]);
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Kiosk Viewport Card */}
-      <div className="ft-card ft-card-editorial">
-        <div className="ft-card-header">
-          <div className="ft-card-title">
-            <span style={{ color: 'var(--ft-claret)' }}>■</span>
-            <span>BIOMETRIC KIOSK TERMINAL</span>
-            <span className="badge-ft badge-ft-dark">FACE ID v1.0</span>
+      {/* Main Terminal Card */}
+      <div className="modern-card">
+        <div className="card-header-clean">
+          <div>
+            <div className="card-title-clean">
+              <Camera size={16} />
+              Face ID Check-In Terminal
+            </div>
+            <div className="card-subtitle-clean">
+              On-device biometric verification • 100% private 128-float vector matching
+            </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Action Mode Selector */}
-            <div style={{ display: 'flex', border: '1px solid var(--ft-border-rule)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+            {/* Mode Selector */}
+            <div style={{ display: 'flex', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
               {(['AUTO', 'IN', 'OUT'] as const).map(action => (
                 <button
                   key={action}
                   onClick={() => setSelectedActionOverride(action)}
-                  className="btn-ft"
                   style={{
                     padding: '4px 10px',
                     fontSize: '11.5px',
                     border: 'none',
-                    borderRadius: 0,
-                    backgroundColor: selectedActionOverride === action ? 'var(--ft-claret)' : 'transparent',
-                    color: selectedActionOverride === action ? '#FFF1E5' : 'var(--ft-ink-body)',
-                    fontWeight: selectedActionOverride === action ? 700 : 500,
+                    backgroundColor: selectedActionOverride === action ? 'var(--accent-primary)' : '#FFFFFF',
+                    color: selectedActionOverride === action ? '#FFFFFF' : 'var(--text-secondary)',
+                    fontWeight: selectedActionOverride === action ? 600 : 500,
+                    cursor: 'pointer',
                   }}
                 >
                   {action}
@@ -273,41 +249,41 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
               ))}
             </div>
 
-            {/* Voice Feedback Toggle */}
+            {/* Voice toggle */}
             <button
               onClick={() => onUpdateMeta({ voice_enabled: !meta.voice_enabled })}
-              className={`btn-ft ${meta.voice_enabled ? 'btn-ft-outline' : 'btn-ft-subtle'}`}
-              style={{ padding: '6px 10px', fontSize: '12px' }}
-              title={meta.voice_enabled ? 'Voice Speech Enabled' : 'Voice Speech Muted'}
+              className="btn-modern btn-secondary"
+              style={{ padding: '6px 9px' }}
+              title={meta.voice_enabled ? 'Voice Feedback Enabled' : 'Voice Muted'}
             >
-              {meta.voice_enabled ? <Volume2 size={14} color="var(--ft-claret)" /> : <VolumeX size={14} />}
+              {meta.voice_enabled ? <Volume2 size={14} color="var(--accent-blue)" /> : <VolumeX size={14} />}
             </button>
 
-            {/* Wake Lock Toggle */}
+            {/* Wake Lock toggle */}
             <button
               onClick={toggleWakeLock}
-              className={`btn-ft ${meta.wake_lock_enabled ? 'btn-ft-outline' : 'btn-ft-subtle'}`}
-              style={{ padding: '6px 10px', fontSize: '12px' }}
-              title="Prevent Screen Sleep (Screen Wake Lock)"
+              className="btn-modern btn-secondary"
+              style={{ padding: '6px 9px' }}
+              title="Keep kiosk tablet screen awake"
             >
-              <Maximize2 size={14} color={meta.wake_lock_enabled ? 'var(--ft-green)' : 'currentColor'} />
+              <Maximize2 size={14} color={meta.wake_lock_enabled ? 'var(--accent-green)' : 'currentColor'} />
             </button>
           </div>
         </div>
 
-        <div className="ft-card-body" style={{ padding: '24px 20px', textAlign: 'center' }}>
+        <div className="card-body-clean" style={{ textAlign: 'center', padding: '24px 20px' }}>
           {/* Camera Viewport Frame */}
-          <div className="kiosk-viewport-wrap">
+          <div className="camera-terminal">
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className="kiosk-video"
+              className="camera-stream"
               style={{ display: cameraActive ? 'block' : 'none' }}
             />
 
-            {/* Placeholder state when camera is stopped */}
+            {/* Idle state */}
             {!cameraActive && (
               <div
                 style={{
@@ -317,134 +293,99 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#FFF1E5',
+                  color: '#FFFFFF',
                   padding: '2rem',
                 }}
               >
                 <div
                   style={{
-                    width: '72px',
-                    height: '72px',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(255, 241, 229, 0.08)',
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: 'var(--radius-full)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginBottom: '16px',
-                    border: '1px solid rgba(255, 241, 229, 0.2)',
+                    marginBottom: '14px',
                   }}
                 >
-                  <Camera size={36} color="var(--ft-claret)" />
+                  <Camera size={26} color="#94A3B8" />
                 </div>
-                <h3 style={{ color: '#FFF1E5', fontSize: '19px', marginBottom: '8px' }}>
-                  Camera Scanner Inactive
+                <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600, marginBottom: '6px' }}>
+                  Camera is turned off
                 </h3>
-                <p style={{ color: '#C8BEB4', fontSize: '13px', maxWidth: '380px', marginBottom: '18px' }}>
-                  Activate the device camera to initiate high-speed on-device Face ID verification.
+                <p style={{ color: '#94A3B8', fontSize: '12.5px', maxWidth: '320px', marginBottom: '16px' }}>
+                  Enable the camera to verify employee check-ins using sub-second on-device Face ID.
                 </p>
                 <button
                   onClick={handleStartCamera}
-                  className="btn-ft btn-ft-primary"
-                  style={{ padding: '10px 22px', fontSize: '14px', gap: '8px' }}
+                  className="btn-modern btn-primary"
+                  style={{ padding: '9px 18px', fontSize: '13px' }}
                 >
-                  <Camera size={16} />
-                  Start Kiosk Camera
+                  <Camera size={15} />
+                  Enable Camera
                 </button>
               </div>
             )}
 
-            {/* Live Camera HUD Overlay */}
+            {/* Camera Active Reticle */}
             {cameraActive && (
-              <div className="kiosk-hud-overlay">
-                {/* Top HUD Bar */}
+              <>
                 <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    background: 'rgba(20, 20, 20, 0.65)',
-                    padding: '8px 12px',
-                    borderRadius: 'var(--radius-xs)',
-                    color: '#FFF1E5',
-                    fontSize: '11px',
-                    fontFamily: 'var(--font-mono-ledger)',
-                    backdropFilter: 'blur(3px)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ color: 'var(--ft-claret)', fontSize: '10px' }}>●</span>
-                    <span>OPTICAL SENSOR: ONLINE</span>
-                  </div>
-                  <div>LIGHT: {Math.round(lightingLevel * 100)}%</div>
-                  <div>LIVENESS: {livenessPassed ? 'PASSED ✓' : 'CHECKING...'}</div>
-                  <div>MODE: {selectedActionOverride}</div>
-                </div>
-
-                {/* Center Biometric Reticle */}
-                <div
-                  className={`kiosk-reticle-box ${
+                  className={`camera-reticle ${
                     confidenceScore > 80 ? 'verifying' : confidenceScore > 30 ? 'detected' : ''
                   }`}
-                >
-                  <div className="corner-bracket tl" />
-                  <div className="corner-bracket tr" />
-                  <div className="corner-bracket bl" />
-                  <div className="corner-bracket br" />
-                  <div className="scanning-laser" />
-                </div>
+                />
 
-                {/* Bottom HUD Bar */}
                 <div
                   style={{
-                    background: 'rgba(20, 20, 20, 0.75)',
-                    padding: '10px 14px',
-                    borderRadius: 'var(--radius-xs)',
-                    color: '#FFF1E5',
-                    textAlign: 'center',
-                    backdropFilter: 'blur(4px)',
+                    position: 'absolute',
+                    bottom: '14px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                    backdropFilter: 'blur(8px)',
+                    color: '#FFFFFF',
+                    padding: '6px 14px',
+                    borderRadius: 'var(--radius-full)',
+                    fontSize: '12px',
+                    fontWeight: 500,
                   }}
                 >
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-mono-ledger)',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      letterSpacing: '0.08em',
-                      color: isVerifying ? '#5cdb8e' : 'var(--ft-paper-bg)',
-                    }}
-                  >
-                    {opticalStatus}
-                  </div>
-                  {confidenceScore > 0 && (
-                    <div style={{ fontSize: '11px', color: '#ffafc0', marginTop: '3px' }}>
-                      MATCH PROBABILITY: {confidenceScore}%
-                    </div>
-                  )}
+                  {opticalStatus}
                 </div>
-              </div>
+              </>
             )}
 
-            {/* Verified Confirmation Stamp Overlay */}
+            {/* Verified Popup Overlay */}
             {verifiedEmployee && (
               <div
                 style={{
                   position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: 'rgba(255, 241, 229, 0.95)',
+                  inset: 0,
+                  backgroundColor: 'rgba(255, 255, 255, 0.96)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '2rem',
+                  padding: '24px',
                   zIndex: 20,
-                  animation: 'fadeIn 0.2s ease',
                 }}
               >
-                <div className="ft-stamp" style={{ fontSize: '16px', marginBottom: '16px' }}>
-                  ★ FT BIOMETRIC RECORD CERTIFIED ★
+                <div
+                  style={{
+                    width: '54px',
+                    height: '54px',
+                    borderRadius: 'var(--radius-full)',
+                    backgroundColor: 'var(--accent-green-light)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--accent-green)',
+                    marginBottom: '12px',
+                  }}
+                >
+                  <CheckCircle2 size={32} />
                 </div>
 
                 {verifiedEmployee.employee.avatar_url && (
@@ -452,80 +393,53 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
                     src={verifiedEmployee.employee.avatar_url}
                     alt={verifiedEmployee.employee.full_name}
                     style={{
-                      width: '84px',
-                      height: '84px',
-                      borderRadius: '50%',
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: 'var(--radius-full)',
                       objectFit: 'cover',
-                      border: '3px solid var(--ft-claret)',
-                      marginBottom: '12px',
+                      border: '2px solid var(--border-light)',
+                      marginBottom: '10px',
                     }}
                   />
                 )}
 
-                <h2 style={{ fontSize: '26px', color: 'var(--ft-ink-primary)', marginBottom: '4px' }}>
+                <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', margin: '0 0 2px 0' }}>
                   {verifiedEmployee.employee.full_name}
-                </h2>
-                <div style={{ fontSize: '14px', color: 'var(--ft-ink-muted)', marginBottom: '14px' }}>
+                </h3>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
                   {verifiedEmployee.employee.role} • {verifiedEmployee.employee.department}
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <span
-                    className={`badge-ft ${
-                      verifiedEmployee.log.action === 'IN' ? 'badge-ft-green' : 'badge-ft-blue'
+                    className={`status-pill ${
+                      verifiedEmployee.log.action === 'IN' ? 'pill-green' : 'pill-blue'
                     }`}
-                    style={{ fontSize: '14px', padding: '6px 14px' }}
+                    style={{ fontSize: '13px', padding: '4px 12px' }}
                   >
-                    RECORDED: {verifiedEmployee.log.action}
+                    Recorded {verifiedEmployee.log.action}
                   </span>
-                  <span className="badge-ft badge-ft-dark" style={{ fontSize: '13px' }}>
-                    {new Date(verifiedEmployee.log.iso_timestamp).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
+                  <span className="status-pill pill-gray" style={{ fontSize: '12px' }}>
+                    {new Date(verifiedEmployee.log.iso_timestamp).toLocaleTimeString([], {
+                      hour: '2-digit',
                       minute: '2-digit',
-                      second: '2-digit',
                     })}
                   </span>
-                </div>
-
-                {verifiedEmployee.log.late_mins > 0 && (
-                  <div
-                    style={{
-                      fontSize: '12.5px',
-                      color: 'var(--ft-amber)',
-                      fontWeight: 600,
-                      marginBottom: '8px',
-                    }}
-                  >
-                    Note: Arrival flagged with {verifiedEmployee.log.late_mins} min grace overtime.
-                  </div>
-                )}
-
-                <div
-                  style={{
-                    fontFamily: 'var(--font-mono-ledger)',
-                    fontSize: '11px',
-                    color: 'var(--ft-ink-subtle)',
-                    wordBreak: 'break-all',
-                    maxWidth: '380px',
-                    textAlign: 'center',
-                  }}
-                >
-                  SHA-256: {verifiedEmployee.log.prev_hash_sig.substring(0, 32)}...
                 </div>
               </div>
             )}
           </div>
 
-          {/* Camera Controls & Status Bar */}
+          {/* Camera controls */}
           {cameraActive && (
-            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
+            <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'center' }}>
               <button
                 onClick={handleStopCamera}
-                className="btn-ft btn-ft-outline"
-                style={{ padding: '6px 14px', fontSize: '12px' }}
+                className="btn-modern btn-secondary"
+                style={{ fontSize: '12px', padding: '5px 12px' }}
               >
-                <CameraOff size={14} />
-                Stop Camera
+                <CameraOff size={13} />
+                Turn Off Camera
               </button>
             </div>
           )}
@@ -533,44 +447,41 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
           {cameraError && (
             <div
               style={{
-                marginTop: '16px',
-                backgroundColor: 'var(--ft-red-light)',
-                color: 'var(--ft-red)',
-                border: '1px solid rgba(186,0,0,0.2)',
-                borderRadius: 'var(--radius-sm)',
+                marginTop: '14px',
                 padding: '10px 14px',
-                fontSize: '12.5px',
+                backgroundColor: 'var(--accent-red-light)',
+                color: 'var(--accent-red)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '12px',
                 textAlign: 'left',
               }}
             >
-              <strong>Camera Access Notice:</strong> {cameraError}
+              {cameraError}
             </div>
           )}
         </div>
       </div>
 
-      {/* Biometric Test Bench / Quick Simulation Drawer */}
-      <div className="ft-card ft-card-dark-header">
-        <div className="ft-card-header">
-          <div className="ft-card-title" style={{ fontSize: '15px' }}>
-            <Sparkles size={16} color="var(--ft-claret)" />
-            <span>BIOMETRIC TEST BENCH & SIMULATION DESK</span>
-          </div>
-          <div className="ft-card-subtitle">
-            Simulate instant Face ID punch without hardware camera
+      {/* Instant Test Bench (Clean & Minimal) */}
+      <div className="modern-card">
+        <div className="card-header-clean">
+          <div>
+            <div className="card-title-clean">
+              <Sparkles size={15} color="var(--accent-blue)" />
+              Quick Test Profiles
+            </div>
+            <div className="card-subtitle-clean">
+              Click any enrolled employee to simulate an instant Face ID punch
+            </div>
           </div>
         </div>
 
-        <div className="ft-card-body" style={{ padding: '16px 18px' }}>
-          <p style={{ fontSize: '12.5px', color: 'var(--ft-ink-muted)', marginBottom: '14px' }}>
-            Click an enrolled employee below to simulate an instantaneous on-device Face ID recognition event, test double-punch guard, and witness real-time cryptographic ledger chaining:
-          </p>
-
+        <div className="card-body-clean" style={{ padding: '16px' }}>
           <div
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
-              gap: '12px',
+              gap: '10px',
             }}
           >
             {employees.map(emp => (
@@ -578,23 +489,23 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
                 key={emp.emp_id}
                 onClick={() => processPunch(emp)}
                 style={{
-                  border: '1px solid var(--ft-border-rule)',
+                  border: '1px solid var(--border-light)',
                   borderRadius: 'var(--radius-sm)',
-                  backgroundColor: '#FFFDFB',
-                  padding: '12px',
+                  backgroundColor: '#FFFFFF',
+                  padding: '10px 12px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
+                  gap: '10px',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease',
+                  transition: 'border-color 0.15s ease, background-color 0.15s ease',
                 }}
                 onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.borderColor = 'var(--ft-claret)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-paper-md)';
+                  (e.currentTarget as HTMLElement).style.borderColor = '#9CA3AF';
+                  (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-hover)';
                 }}
                 onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.borderColor = 'var(--ft-border-rule)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                  (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-light)';
+                  (e.currentTarget as HTMLElement).style.backgroundColor = '#FFFFFF';
                 }}
               >
                 {emp.avatar_url && (
@@ -602,20 +513,20 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
                     src={emp.avatar_url}
                     alt={emp.full_name}
                     style={{
-                      width: '42px',
-                      height: '42px',
-                      borderRadius: '50%',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: 'var(--radius-full)',
                       objectFit: 'cover',
-                      border: '1px solid var(--ft-border-dark)',
+                      border: '1px solid var(--border-light)',
                     }}
                   />
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
-                      fontFamily: 'var(--font-serif-headline)',
-                      fontSize: '14px',
-                      fontWeight: 700,
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: 'var(--text-primary)',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -623,13 +534,8 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
                   >
                     {emp.full_name}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--ft-ink-muted)' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                     {emp.emp_id} • {emp.shift_id}
-                  </div>
-                  <div style={{ marginTop: '4px' }}>
-                    <span className="badge-ft badge-ft-green" style={{ fontSize: '9px', padding: '1px 5px' }}>
-                      FACE ID READY
-                    </span>
                   </div>
                 </div>
               </div>
@@ -638,7 +544,7 @@ export const KioskScanner: React.FC<KioskScannerProps> = ({
         </div>
       </div>
 
-      {/* Double-Punch Warning Modal */}
+      {/* Double Punch Warning Modal */}
       <DoublePunchModal
         isOpen={doublePunchGuard.isOpen}
         employee={doublePunchGuard.employee}

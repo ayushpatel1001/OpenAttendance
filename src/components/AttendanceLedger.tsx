@@ -1,14 +1,16 @@
-// Chronological Attendance Ledger & Cryptographic Audit Table
+// SheetPulse • Attendance Ledger (Clean, Minimal & Searchable)
 
 import React, { useState } from 'react';
-import { Search, Filter, Download, ShieldCheck, CheckCircle2, Clock, Copy, Check } from 'lucide-react';
+import { Search, Download, ShieldCheck, Copy, Check, Trash2 } from 'lucide-react';
 import type { AttendanceLog } from '../types';
+import { db } from '../services/db';
 
 interface AttendanceLedgerProps {
   logs: AttendanceLog[];
+  onRefresh?: () => void;
 }
 
-export const AttendanceLedger: React.FC<AttendanceLedgerProps> = ({ logs }) => {
+export const AttendanceLedger: React.FC<AttendanceLedgerProps> = ({ logs, onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState<string>('ALL');
   const [copiedHash, setCopiedHash] = useState<string | null>(null);
@@ -17,6 +19,13 @@ export const AttendanceLedger: React.FC<AttendanceLedgerProps> = ({ logs }) => {
     navigator.clipboard.writeText(hash);
     setCopiedHash(hash);
     setTimeout(() => setCopiedHash(null), 1800);
+  };
+
+  const handleDeleteLog = async (logId: string) => {
+    if (confirm('Delete this punch record? Note: Cryptographic audit chain will flag any break unless re-calculated.')) {
+      await db.attendance_logs.delete(logId);
+      if (onRefresh) onRefresh();
+    }
   };
 
   const filteredLogs = logs.filter(log => {
@@ -54,206 +63,180 @@ export const AttendanceLedger: React.FC<AttendanceLedgerProps> = ({ logs }) => {
   };
 
   return (
-    <div className="ft-card ft-card-editorial">
-      <div className="ft-card-header">
-        <div>
-          <div className="ft-card-title">
-            <span>CHRONOLOGICAL ATTENDANCE LEDGER</span>
-            <span className="badge-ft badge-ft-dark">{filteredLogs.length} ENTRIES</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="modern-card">
+        <div className="card-header-clean">
+          <div>
+            <div className="card-title-clean">
+              Attendance Event Ledger
+              <span className="status-pill pill-gray">{filteredLogs.length} Records</span>
+            </div>
+            <div className="card-subtitle-clean">
+              Immutable event stream cryptographically chained via SHA-256 hashes
+            </div>
           </div>
-          <div className="ft-card-subtitle">
-            Cryptographically chained append-only stream mapped to 'Attendance_Log' Google Sheets tab
+
+          <button onClick={exportCsv} className="btn-modern btn-secondary" style={{ fontSize: '12px' }}>
+            <Download size={13} />
+            Export CSV
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div
+          style={{
+            padding: '12px 18px',
+            borderBottom: '1px solid var(--border-light)',
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ position: 'relative', maxWidth: '300px', flex: 1 }}>
+            <Search size={14} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-muted)' }} />
+            <input
+              type="text"
+              placeholder="Search employee, ID, or hash..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="clean-input"
+              style={{ paddingLeft: '32px' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {(['ALL', 'IN', 'OUT'] as const).map(action => (
+              <button
+                key={action}
+                onClick={() => setActionFilter(action)}
+                className={`btn-modern ${actionFilter === action ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '4px 10px', fontSize: '11.5px' }}
+              >
+                {action}
+              </button>
+            ))}
           </div>
         </div>
 
-        <button onClick={exportCsv} className="btn-ft btn-ft-outline" style={{ fontSize: '12px' }}>
-          <Download size={13} />
-          Export Ledger (CSV)
-        </button>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div
-        style={{
-          padding: '12px 18px',
-          borderBottom: '1px solid var(--ft-border-rule)',
-          backgroundColor: '#FFFDFB',
-          display: 'flex',
-          gap: '12px',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '220px' }}>
-          <Search size={16} color="var(--ft-ink-muted)" />
-          <input
-            type="text"
-            placeholder="Search by Employee ID, Name, or Hash..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '6px 10px',
-              fontSize: '13px',
-              border: '1px solid var(--ft-border-rule)',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'var(--ft-paper-bg)',
-              fontFamily: 'var(--font-sans-body)',
-            }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Filter size={14} color="var(--ft-ink-muted)" />
-          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ft-ink-muted)' }}>ACTION:</span>
-          {(['ALL', 'IN', 'OUT'] as const).map(action => (
-            <button
-              key={action}
-              onClick={() => setActionFilter(action)}
-              className="btn-ft"
-              style={{
-                padding: '4px 8px',
-                fontSize: '11px',
-                backgroundColor: actionFilter === action ? 'var(--ft-border-dark)' : 'transparent',
-                color: actionFilter === action ? '#FFF1E5' : 'var(--ft-ink-body)',
-                border: '1px solid var(--ft-border-rule)',
-                borderRadius: 'var(--radius-xs)',
-              }}
-            >
-              {action}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="ft-table-wrapper" style={{ border: 'none' }}>
-        <table className="ft-table">
-          <thead>
-            <tr>
-              <th>TIMESTAMP</th>
-              <th>EMPLOYEE</th>
-              <th>ACTION</th>
-              <th>METHOD</th>
-              <th>PUNCTUALITY</th>
-              <th>DEVICE</th>
-              <th>SHA-256 CHAIN HASH</th>
-              <th>SYNC STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredLogs.length === 0 ? (
+        {/* Table */}
+        <div className="table-container" style={{ border: 'none', borderRadius: 0 }}>
+          <table className="modern-table">
+            <thead>
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', padding: '30px', color: 'var(--ft-ink-muted)' }}>
-                  No attendance records found matching filters.
-                </td>
+                <th>Time & Date</th>
+                <th>Employee</th>
+                <th>Action</th>
+                <th>Punctuality</th>
+                <th>SHA-256 Signature</th>
+                <th>Sync Status</th>
+                <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
-            ) : (
-              filteredLogs.map(log => {
-                const dateObj = new Date(log.iso_timestamp);
-                const timeStr = dateObj.toLocaleTimeString('en-US', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                });
-                const dateStr = dateObj.toLocaleDateString('en-GB', {
-                  month: 'short',
-                  day: 'numeric',
-                });
+            </thead>
+            <tbody>
+              {filteredLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                    No matching attendance records.
+                  </td>
+                </tr>
+              ) : (
+                filteredLogs.map(log => {
+                  const dateObj = new Date(log.iso_timestamp);
+                  const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                  const dateStr = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
-                return (
-                  <tr key={log.log_id}>
-                    <td>
-                      <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono-ledger)' }}>{timeStr}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--ft-ink-muted)' }}>{dateStr}</div>
-                    </td>
+                  return (
+                    <tr key={log.log_id}>
+                      <td>
+                        <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{timeStr}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{dateStr}</div>
+                      </td>
 
-                    <td>
-                      <div style={{ fontWeight: 700, fontFamily: 'var(--font-serif-headline)', fontSize: '14px' }}>
-                        {log.full_name || log.emp_id}
-                      </div>
-                      <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono-ledger)', color: 'var(--ft-ink-muted)' }}>
-                        {log.emp_id}
-                      </div>
-                    </td>
+                      <td>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                          {log.full_name || log.emp_id}
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                          {log.emp_id}
+                        </div>
+                      </td>
 
-                    <td>
-                      <span
-                        className={`badge-ft ${
-                          log.action === 'IN' ? 'badge-ft-green' : 'badge-ft-blue'
-                        }`}
-                      >
-                        {log.action}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className="badge-ft badge-ft-dark" style={{ gap: '4px' }}>
-                        FACE ID
-                      </span>
-                    </td>
-
-                    <td>
-                      {log.action === 'IN' && log.late_mins > 0 ? (
-                        <span className="badge-ft badge-ft-amber">
-                          +{log.late_mins}m LATE
+                      <td>
+                        <span className={`status-pill ${log.action === 'IN' ? 'pill-green' : 'pill-blue'}`}>
+                          {log.action}
                         </span>
-                      ) : (
-                        <span style={{ fontSize: '12px', color: 'var(--ft-green)', fontWeight: 600 }}>
-                          ON TIME
-                        </span>
-                      )}
-                    </td>
+                      </td>
 
-                    <td style={{ fontSize: '12px', color: 'var(--ft-ink-muted)', fontFamily: 'var(--font-mono-ledger)' }}>
-                      {log.device_id}
-                    </td>
-
-                    <td>
-                      <div
-                        onClick={() => copyToClipboard(log.prev_hash_sig)}
-                        title="Click to copy SHA-256 hash"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          cursor: 'pointer',
-                          padding: '3px 6px',
-                          backgroundColor: 'var(--ft-paper-subtle)',
-                          borderRadius: 'var(--radius-xs)',
-                          border: '1px solid var(--ft-border-rule)',
-                          fontSize: '11px',
-                          fontFamily: 'var(--font-mono-ledger)',
-                        }}
-                      >
-                        <ShieldCheck size={12} color="var(--ft-green)" />
-                        <span>{log.prev_hash_sig.substring(0, 10)}...{log.prev_hash_sig.substring(log.prev_hash_sig.length - 6)}</span>
-                        {copiedHash === log.prev_hash_sig ? (
-                          <Check size={12} color="var(--ft-green)" />
+                      <td>
+                        {log.action === 'IN' && log.late_mins > 0 ? (
+                          <span className="status-pill pill-amber">
+                            +{log.late_mins}m Late
+                          </span>
                         ) : (
-                          <Copy size={11} color="var(--ft-ink-muted)" />
+                          <span className="status-pill pill-green">
+                            On Time
+                          </span>
                         )}
-                      </div>
-                    </td>
+                      </td>
 
-                    <td>
-                      {log.sync_status === 'synced' ? (
-                        <span className="badge-ft badge-ft-green">
-                          <CheckCircle2 size={11} /> SYNCED
-                        </span>
-                      ) : (
-                        <span className="badge-ft badge-ft-amber">
-                          <Clock size={11} /> OUTBOX QUEUE
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                      <td>
+                        <div
+                          onClick={() => copyToClipboard(log.prev_hash_sig)}
+                          title="Click to copy hash signature"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            cursor: 'pointer',
+                            padding: '3px 7px',
+                            backgroundColor: 'var(--bg-subtle)',
+                            borderRadius: 'var(--radius-sm)',
+                            fontSize: '11px',
+                            fontFamily: 'var(--font-mono)',
+                            color: 'var(--text-secondary)',
+                          }}
+                        >
+                          <ShieldCheck size={12} color="var(--accent-green)" />
+                          <span>{log.prev_hash_sig.substring(0, 10)}...</span>
+                          {copiedHash === log.prev_hash_sig ? (
+                            <Check size={11} color="var(--accent-green)" />
+                          ) : (
+                            <Copy size={11} color="var(--text-muted)" />
+                          )}
+                        </div>
+                      </td>
+
+                      <td>
+                        {log.sync_status === 'synced' ? (
+                          <span className="status-pill pill-green">
+                            Synced
+                          </span>
+                        ) : (
+                          <span className="status-pill pill-amber">
+                            Queued
+                          </span>
+                        )}
+                      </td>
+
+                      <td style={{ textAlign: 'right' }}>
+                        <button
+                          onClick={() => handleDeleteLog(log.log_id)}
+                          className="btn-modern btn-ghost"
+                          style={{ padding: '3px 6px', color: 'var(--accent-red)' }}
+                          title="Delete punch"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

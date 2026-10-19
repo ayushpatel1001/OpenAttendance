@@ -1,8 +1,7 @@
-// SheetPulse • Weekly Gazette & Rollup Reporting
-// 16-Hour Pairing Rollup • Overtime Tracking • Standalone Google Sheet Export
+// SheetPulse • Weekly Rollup & Reporting (Clean & Minimal)
 
 import React, { useState, useEffect } from 'react';
-import { Download, FileSpreadsheet, Printer, AlertCircle } from 'lucide-react';
+import { Download, FileSpreadsheet, AlertCircle } from 'lucide-react';
 import type { WeeklyRollupRow } from '../types';
 import { generateWeeklyReport, exportReportToCsv, getIsoWeekString } from '../services/reports';
 import { googleSheetsService } from '../services/googleSheets';
@@ -37,10 +36,6 @@ export const WeeklyGazette: React.FC = () => {
     a.href = url;
     a.download = `SheetPulse_Weekly_Report_${currentWeek}.csv`;
     a.click();
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   const handleExportGoogleSheet = async () => {
@@ -78,7 +73,6 @@ export const WeeklyGazette: React.FC = () => {
         setExportNotice(`Export failed: ${err.message}. Ensure valid OAuth token.`);
       }
     } else {
-      // Local simulation export
       handleDownloadCsv();
       setExportNotice('Exported as clean CSV formatted for immediate Google Sheets / Excel import.');
     }
@@ -87,103 +81,82 @@ export const WeeklyGazette: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Editorial Summary Banner */}
-      <div className="ft-card ft-card-editorial">
-        <div className="ft-card-header">
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+        <div className="modern-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>REGULAR HOURS</div>
+          <div style={{ fontSize: '26px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
+            {totalRegularHours.toFixed(1)} <span style={{ fontSize: '14px', fontWeight: 500 }}>hrs</span>
+          </div>
+        </div>
+
+        <div className="modern-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>OVERTIME HOURS</div>
+          <div style={{ fontSize: '26px', fontWeight: 700, color: 'var(--accent-green)', marginTop: '4px' }}>
+            +{totalOvertimeHours.toFixed(1)} <span style={{ fontSize: '14px', fontWeight: 500 }}>hrs</span>
+          </div>
+        </div>
+
+        <div className="modern-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>LATE ARRIVALS</div>
+          <div style={{ fontSize: '26px', fontWeight: 700, color: totalLateArrivals > 0 ? 'var(--accent-amber)' : 'var(--accent-green)', marginTop: '4px' }}>
+            {totalLateArrivals}
+          </div>
+        </div>
+
+        <div className="modern-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>UNPAIRED PUNCHES</div>
+          <div style={{ fontSize: '26px', fontWeight: 700, color: totalMissingOut > 0 ? 'var(--accent-red)' : 'var(--accent-green)', marginTop: '4px' }}>
+            {totalMissingOut}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Table Card */}
+      <div className="modern-card">
+        <div className="card-header-clean">
           <div>
-            <div className="ft-card-title">
-              <span>EXECUTIVE WEEKLY REPORT & PAYROLL ROLLUP</span>
+            <div className="card-title-clean">
+              Weekly Attendance & Overtime Rollup
               <select
                 value={currentWeek}
                 onChange={e => setCurrentWeek(e.target.value)}
                 style={{
-                  padding: '2px 8px',
+                  padding: '3px 8px',
                   fontSize: '12px',
-                  fontFamily: 'var(--font-mono-ledger)',
-                  fontWeight: 700,
-                  backgroundColor: 'var(--ft-claret-light)',
-                  color: 'var(--ft-claret)',
-                  border: '1px solid rgba(153, 15, 61, 0.3)',
-                  borderRadius: 'var(--radius-xs)',
+                  fontWeight: 600,
+                  backgroundColor: 'var(--bg-subtle)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-light)',
+                  borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
+                  marginLeft: '8px',
                 }}
               >
-                <option value="2026-W42">2026-W42 (CURRENT)</option>
-                <option value="2026-W41">2026-W41 (OCT 05 - OCT 11)</option>
-                <option value="2026-W40">2026-W40 (SEP 28 - OCT 04)</option>
+                <option value="2026-W42">2026-W42 (Current)</option>
+                <option value="2026-W41">2026-W41 (Oct 05 - Oct 11)</option>
+                <option value="2026-W40">2026-W40 (Sep 28 - Oct 04)</option>
               </select>
             </div>
-            <div className="ft-card-subtitle">
-              Calculated via 16-Hour Pairing Window • Overtime multipliers applied • Standalone Sheet Ready
+            <div className="card-subtitle-clean">
+              Aggregated across 16-hour shift pairing windows for accurate overnight shift accounting
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={handlePrint} className="btn-ft btn-ft-outline" style={{ fontSize: '12px' }}>
-              <Printer size={13} />
-              Print Gazette
-            </button>
-            <button onClick={handleDownloadCsv} className="btn-ft btn-ft-outline" style={{ fontSize: '12px' }}>
+            <button onClick={handleDownloadCsv} className="btn-modern btn-secondary" style={{ fontSize: '12px' }}>
               <Download size={13} />
               Export CSV
             </button>
             <button
               onClick={handleExportGoogleSheet}
               disabled={isExporting}
-              className="btn-ft btn-ft-primary"
+              className="btn-modern btn-primary"
               style={{ fontSize: '12px' }}
             >
               <FileSpreadsheet size={13} />
-              {isExporting ? 'Exporting...' : 'Export to Google Sheet'}
+              {isExporting ? 'Exporting...' : 'Export to Sheet'}
             </button>
-          </div>
-        </div>
-
-        {/* Aggregate KPI Strip */}
-        <div
-          style={{
-            padding: '16px 20px',
-            borderBottom: '1px solid var(--ft-border-rule)',
-            backgroundColor: '#FFFDFB',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '16px',
-          }}
-        >
-          <div style={{ borderRight: '1px solid var(--ft-border-rule)', paddingRight: '12px' }}>
-            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--ft-ink-muted)', fontWeight: 600 }}>
-              REGULAR WORKED HOURS
-            </div>
-            <div style={{ fontFamily: 'var(--font-serif-headline)', fontSize: '24px', fontWeight: 700, color: 'var(--ft-ink-primary)' }}>
-              {totalRegularHours.toFixed(1)} <span style={{ fontSize: '14px', fontWeight: 500 }}>hrs</span>
-            </div>
-          </div>
-
-          <div style={{ borderRight: '1px solid var(--ft-border-rule)', paddingRight: '12px' }}>
-            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--ft-ink-muted)', fontWeight: 600 }}>
-              APPROVED OVERTIME
-            </div>
-            <div style={{ fontFamily: 'var(--font-serif-headline)', fontSize: '24px', fontWeight: 700, color: 'var(--ft-green)' }}>
-              +{totalOvertimeHours.toFixed(1)} <span style={{ fontSize: '14px', fontWeight: 500 }}>hrs</span>
-            </div>
-          </div>
-
-          <div style={{ borderRight: '1px solid var(--ft-border-rule)', paddingRight: '12px' }}>
-            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--ft-ink-muted)', fontWeight: 600 }}>
-              LATE ARRIVALS
-            </div>
-            <div style={{ fontFamily: 'var(--font-serif-headline)', fontSize: '24px', fontWeight: 700, color: totalLateArrivals > 0 ? 'var(--ft-amber)' : 'var(--ft-green)' }}>
-              {totalLateArrivals} <span style={{ fontSize: '14px', fontWeight: 500 }}>flagged</span>
-            </div>
-          </div>
-
-          <div>
-            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--ft-ink-muted)', fontWeight: 600 }}>
-              MISSING OUT PUNCHES
-            </div>
-            <div style={{ fontFamily: 'var(--font-serif-headline)', fontSize: '24px', fontWeight: 700, color: totalMissingOut > 0 ? 'var(--ft-red)' : 'var(--ft-green)' }}>
-              {totalMissingOut} <span style={{ fontSize: '14px', fontWeight: 500 }}>unpaired</span>
-            </div>
           </div>
         </div>
 
@@ -191,97 +164,75 @@ export const WeeklyGazette: React.FC = () => {
           <div
             style={{
               padding: '10px 18px',
-              backgroundColor: 'var(--ft-paper-subtle)',
-              borderBottom: '1px solid var(--ft-border-rule)',
+              backgroundColor: 'var(--accent-blue-light)',
+              color: 'var(--accent-blue)',
               fontSize: '12.5px',
-              color: 'var(--ft-ink-primary)',
+              borderBottom: '1px solid var(--border-light)',
             }}
           >
             {exportNotice}
           </div>
         )}
 
-        {/* Table */}
-        <div className="ft-table-wrapper" style={{ border: 'none' }}>
-          <table className="ft-table">
+        <div className="table-container" style={{ border: 'none', borderRadius: 0 }}>
+          <table className="modern-table">
             <thead>
               <tr>
-                <th>EMPLOYEE</th>
-                <th>DEPARTMENT</th>
-                <th>PRESENT</th>
-                <th>ABSENT</th>
-                <th>REGULAR HOURS</th>
-                <th>OVERTIME HOURS</th>
-                <th>LATE COUNT</th>
-                <th>MISSING OUT</th>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>Present</th>
+                <th>Absent</th>
+                <th>Regular Hours</th>
+                <th>Overtime</th>
+                <th>Late Flags</th>
+                <th>Missing Punches</th>
               </tr>
             </thead>
             <tbody>
               {reportRows.map(row => (
                 <tr key={row.emp_id}>
                   <td>
-                    <div style={{ fontWeight: 700, fontFamily: 'var(--font-serif-headline)', fontSize: '14px' }}>
-                      {row.full_name}
-                    </div>
-                    <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono-ledger)', color: 'var(--ft-ink-muted)' }}>
+                    <div style={{ fontWeight: 600 }}>{row.full_name}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                       {row.emp_id}
                     </div>
                   </td>
-
                   <td>{row.department}</td>
-
                   <td>
-                    <span className="badge-ft badge-ft-green">{row.days_present} DAYS</span>
+                    <span className="status-pill pill-green">{row.days_present} Days</span>
                   </td>
-
                   <td>
                     {row.days_absent > 0 ? (
-                      <span className="badge-ft badge-ft-dark">{row.days_absent} DAYS</span>
+                      <span className="status-pill pill-gray">{row.days_absent} Days</span>
                     ) : (
-                      <span style={{ fontSize: '12px', color: 'var(--ft-green)' }}>0</span>
+                      <span style={{ color: 'var(--accent-green)' }}>0</span>
                     )}
                   </td>
-
-                  <td style={{ fontFamily: 'var(--font-mono-ledger)', fontWeight: 600 }}>
+                  <td style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>
                     {row.total_regular_hrs.toFixed(1)}h
                   </td>
-
-                  <td style={{ fontFamily: 'var(--font-mono-ledger)', fontWeight: 600, color: row.overtime_hrs > 0 ? 'var(--ft-green)' : 'inherit' }}>
+                  <td style={{ fontWeight: 600, fontFamily: 'var(--font-mono)', color: row.overtime_hrs > 0 ? 'var(--accent-green)' : 'inherit' }}>
                     {row.overtime_hrs > 0 ? `+${row.overtime_hrs.toFixed(1)}h` : '0.0h'}
                   </td>
-
                   <td>
                     {row.late_count > 0 ? (
-                      <span className="badge-ft badge-ft-amber">{row.late_count} LATE</span>
+                      <span className="status-pill pill-amber">{row.late_count} Late</span>
                     ) : (
-                      <span style={{ fontSize: '12px', color: 'var(--ft-green)' }}>0</span>
+                      <span style={{ color: 'var(--accent-green)' }}>0</span>
                     )}
                   </td>
-
                   <td>
                     {row.missing_out_punches > 0 ? (
-                      <span className="badge-ft badge-ft-claret">
-                        <AlertCircle size={10} /> {row.missing_out_punches} MISSING
+                      <span className="status-pill pill-red">
+                        <AlertCircle size={10} /> {row.missing_out_punches} Missing
                       </span>
                     ) : (
-                      <span style={{ fontSize: '12px', color: 'var(--ft-green)' }}>0</span>
+                      <span style={{ color: 'var(--accent-green)' }}>0</span>
                     )}
                   </td>
                 </tr>
               ))}
             </tbody>
-
-            <tfoot>
-              <tr>
-                <td colSpan={2}>LEDGER TOTALS:</td>
-                <td>—</td>
-                <td>—</td>
-                <td>{totalRegularHours.toFixed(1)} hrs</td>
-                <td style={{ color: 'var(--ft-green)' }}>+{totalOvertimeHours.toFixed(1)} hrs</td>
-                <td>{totalLateArrivals}</td>
-                <td>{totalMissingOut}</td>
-              </tr>
-            </tfoot>
           </table>
         </div>
       </div>
