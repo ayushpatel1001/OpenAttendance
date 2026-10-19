@@ -98,13 +98,13 @@ You must whitelist this domain in Google Cloud Console so users can authenticate
 3. Click on your OAuth 2.0 Client ID (**OpenAttendance Web Client**).
 4. Under **Authorized JavaScript origins**, click **+ Add URI**:
    - Enter your Amplify URL:  
-     `https://main.<app-id>.amplifyapp.com`  
+     `https://main.d1drk6qt5eh99g.amplifyapp.com`  
      *(or your custom domain, e.g., `https://attendance.yourdomain.com`)*
 
    > [!CAUTION]
    > **Do NOT include a trailing slash!**  
-   > Correct: `https://main.d1234567890.amplifyapp.com`  
-   > Incorrect: `https://main.d1234567890.amplifyapp.com/`
+   > Correct: `https://main.d1drk6qt5eh99g.amplifyapp.com`  
+   > Incorrect: `https://main.d1drk6qt5eh99g.amplifyapp.com/`
 
 5. Under **Authorized redirect URIs**: Leave empty (OpenAttendance uses Google Identity Services popup tokens).
 6. Click **Save**.

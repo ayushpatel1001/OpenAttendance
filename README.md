@@ -3,10 +3,13 @@
 > **Zero Server. Zero Subscription. 100% Free & Open Source for anyone with a Google Account.**  
 > A simple, privacy-centric, local-first Progressive Web App (PWA) backed entirely by the user's personal Google Drive and Google Sheets, featuring on-device Face ID.
 
+[![Live App on AWS Amplify](https://img.shields.io/badge/Live%20App-AWS%20Amplify-FF9900.svg)](https://main.d1drk6qt5eh99g.amplifyapp.com/)
 [![PWA Ready](https://img.shields.io/badge/PWA-100%25%20Offline%20First-2563EB.svg)](https://w3c.github.io/manifest/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-10B981.svg)](LICENSE)
 [![Operating Cost](https://img.shields.io/badge/Monthly%20Cost-%240.00%2Fmo-059669.svg)](#why-zero-cost)
 [![Biometrics](https://img.shields.io/badge/Biometrics-128--Float%20Vectors%20Only-111827.svg)](#privacy-guarantees)
+
+> 🚀 **Live Deployment:** [https://main.d1drk6qt5eh99g.amplifyapp.com/](https://main.d1drk6qt5eh99g.amplifyapp.com/)
 
 ---
 
@@ -183,14 +186,17 @@ jobs:
 
 ## 8. Deploying to AWS Amplify Hosting
 
-OpenAttendance includes a pre-configured [amplify.yml](file:///Users/ayushpatel/Code/vibe_coded_apps/attendance_sheets_pwa/amplify.yml) build specification for AWS Amplify Hosting:
+OpenAttendance is deployed on AWS Amplify at:  
+👉 **[https://main.d1drk6qt5eh99g.amplifyapp.com/](https://main.d1drk6qt5eh99g.amplifyapp.com/)**
 
-1. In the **AWS Amplify Console**, click **Host web app** and connect your GitHub repository (`ayushpatel1001/OpenAttendance`).
+The repository includes a pre-configured [amplify.yml](file:///Users/ayushpatel/Code/vibe_coded_apps/attendance_sheets_pwa/amplify.yml) build specification for AWS Amplify Hosting:
+
+1. In the **AWS Amplify Console**, connect your GitHub repository (`ayushpatel1001/OpenAttendance`).
 2. Amplify will auto-detect `amplify.yml` and build with `dist/`.
 3. Under **App settings > Environment variables**, add:
    - **Key:** `VITE_GOOGLE_CLIENT_ID`
    - **Value:** `<your-google-oauth-client-id>.apps.googleusercontent.com`
-4. In Google Cloud Console, add your Amplify domain (e.g. `https://main.<app-id>.amplifyapp.com`) to **Authorized JavaScript origins**.
+4. In Google Cloud Console, add `https://main.d1drk6qt5eh99g.amplifyapp.com` to **Authorized JavaScript origins**.
 
 For full walkthrough with screenshots and custom domain setup, read the **[AWS Amplify Setup Guide](file:///Users/ayushpatel/Code/vibe_coded_apps/attendance_sheets_pwa/AMPLIFY_SETUP.md)**.
 

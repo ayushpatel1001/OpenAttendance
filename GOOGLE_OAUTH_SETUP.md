@@ -78,7 +78,7 @@ Before creating credentials, Google requires basic information about the applica
      `https://<your-username>.github.io`  
      *(replace `<your-username>` with your actual GitHub username)*
    - For AWS Amplify Hosting:  
-     `https://main.<app-id>.amplifyapp.com`  
+     `https://main.d1drk6qt5eh99g.amplifyapp.com`  
      *(or your custom domain, e.g., `https://attendance.yourdomain.com`)*
 
    > [!CAUTION]
